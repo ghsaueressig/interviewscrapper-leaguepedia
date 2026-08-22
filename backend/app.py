@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from youtube_metadata import get_youtube_metadata
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -385,6 +386,29 @@ def make_template(res):
 @app.get('/api/health')
 def health():
     return jsonify({"status": "ok"})
+
+@app.route("/api/youtube-metadata", methods=["POST"])
+def youtube_metadata():
+    data = request.get_json()
+
+    if not data or not data.get("url"):
+        return jsonify({
+            "error": "URL não informada"
+        }), 400
+
+    try:
+        result = get_youtube_metadata(data["url"])
+        return jsonify(result)
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({
+            "error": f"Erro ao consultar YouTube API: {str(e)}"
+        }), 500
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 @app.post('/api/scrape')
 def scrape():
