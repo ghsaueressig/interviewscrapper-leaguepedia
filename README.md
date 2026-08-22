@@ -58,8 +58,7 @@ A publicação é identificada automaticamente a partir do domínio da URL.
 
 Como o principal uso da ferramenta é processar matérias escritas:
 
-- URLs de `maisesports.com.br` são consideradas conteúdo escrito.
-- URLs de `sheepesports.com` são consideradas conteúdo escrito.
+- URLs de `maisesports.com.br` e `sheepesports.com` são consideradas conteúdo escrito.
 - Plataformas conhecidas de vídeo são identificadas como vídeo.
 - Outros domínios utilizam uma detecção baseada nos elementos e metadados da página.
 
