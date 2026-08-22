@@ -205,7 +205,30 @@ def detect_translator(content_text):
                 return name
     return ''
 
-def detect_video(soup):
+def detect_video(url, soup):
+    """Detecta vídeo priorizando a plataforma de origem.
+
+    Regra de negócio: links do Mais Esports e Sheep Esports usados por esta
+    ferramenta são considerados conteúdo escrito. Plataformas conhecidas de
+    vídeo são consideradas vídeo. Outros domínios usam heurísticas do HTML.
+    """
+    hostname = (urlparse(url).hostname or '').lower().removeprefix('www.')
+
+    written_publications = {'maisesports.com.br', 'sheepesports.com'}
+    video_domains = {
+        'youtube.com', 'youtu.be', 'youtube-nocookie.com',
+        'vimeo.com', 'twitch.tv', 'kick.com', 'streamable.com'
+    }
+
+    # Regra explícita para as duas fontes principais da ferramenta.
+    if hostname in written_publications:
+        return 'No'
+
+    # Regra explícita para plataformas de vídeo (inclui subdomínios).
+    if any(hostname == domain or hostname.endswith('.' + domain) for domain in video_domains):
+        return 'Yes'
+
+    # Para domínios ambíguos (ex.: redes sociais), usamos os sinais da página.
     og_type = soup.find('meta', attrs={'property': 'og:type'})
     if og_type and 'video' in (og_type.get('content') or '').lower():
         return 'Yes'
@@ -215,7 +238,10 @@ def detect_video(soup):
 
     for iframe in soup.find_all('iframe'):
         src = (iframe.get('src') or '').lower()
-        if any(host in src for host in ('youtube.com', 'youtu.be', 'youtube-nocookie.com', 'vimeo.com')):
+        if any(host in src for host in (
+            'youtube.com', 'youtu.be', 'youtube-nocookie.com',
+            'vimeo.com', 'twitch.tv', 'player.twitch.tv', 'kick.com'
+        )):
             return 'Yes'
 
     for script in soup.find_all('script', type='application/ld+json'):
@@ -225,8 +251,16 @@ def detect_video(soup):
             if isinstance(items, dict):
                 items = [items]
             if isinstance(items, list):
-                if any(isinstance(item, dict) and item.get('@type') in ('VideoObject', 'Video') for item in items):
-                    return 'Yes'
+                for item in items:
+                    if not isinstance(item, dict):
+                        continue
+                    item_type = item.get('@type', '')
+                    if isinstance(item_type, list):
+                        is_video = any(t in ('VideoObject', 'Video') for t in item_type)
+                    else:
+                        is_video = item_type in ('VideoObject', 'Video')
+                    if is_video:
+                        return 'Yes'
         except (json.JSONDecodeError, TypeError):
             pass
 
@@ -304,7 +338,7 @@ def scrape_article(url):
         tournament = detect_tournament(date_published, title, content_text, url)
         content_type = detect_type(title, content_text)
         translator = detect_translator(content_text)
-        isvideo = detect_video(soup)
+        isvideo = detect_video(url, soup)
 
         return {
             'url': url,
