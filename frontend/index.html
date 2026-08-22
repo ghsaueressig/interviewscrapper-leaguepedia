@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaguepedia Interview Scraper</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Leaguepedia Interview Scraper</h1>
+      <p>Extraia entrevistas do Mais Esports e gere rapidamente o template <code>ExternalContent/Line</code>.</p>
+    </header>
+
+    <section class="card">
+      <label for="api-url">URL da API</label>
+      <input id="api-url" type="url" placeholder="https://seu-backend.onrender.com">
+
+      <label for="urls">Links das entrevistas</label>
+      <textarea id="urls" placeholder="Cole um link por linha..."></textarea>
+
+      <div class="grid">
+        <div>
+          <label for="tournament">Torneio</label>
+          <input id="tournament" value="CBLOL 2026 Split 2">
+        </div>
+        <div>
+          <label for="publication">Publicação</label>
+          <input id="publication" value="Mais Esports">
+        </div>
+        <div>
+          <label for="type">Tipo</label>
+          <input id="type" value="Interview">
+        </div>
+        <div>
+          <label for="isvideo">É vídeo?</label>
+          <select id="isvideo">
+            <option value="No" selected>Não</option>
+            <option value="Yes">Sim</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="translator">Tradutor</label>
+      <input id="translator" value="">
+
+      <div class="actions">
+        <button id="scrape">Gerar Templates</button>
+        <button id="clear" class="secondary">Limpar histórico</button>
+      </div>
+
+      <p id="status" class="status"></p>
+    </section>
+
+    <section id="results"></section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
