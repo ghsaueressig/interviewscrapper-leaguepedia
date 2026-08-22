@@ -111,3 +111,24 @@ button.copy {
   .grid { grid-template-columns: 1fr; }
   .actions { flex-direction: column; }
 }
+
+.hint {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
+
+.detected-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f6f7f9;
+  font-size: 0.9rem;
+}
+
+.detected-info span {
+  overflow-wrap: anywhere;
+}

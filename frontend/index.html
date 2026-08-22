@@ -10,44 +10,20 @@
   <main class="container">
     <header>
       <h1>Leaguepedia Interview Scraper</h1>
-      <p>Extraia entrevistas do Mais Esports e gere rapidamente o template <code>ExternalContent/Line</code>.</p>
+      <p>Cole os links das matérias e gere automaticamente o template <code>ExternalContent/Line</code>.</p>
     </header>
 
     <section class="card">
-      <label for="api-url">URL da API</label>
-      <input id="api-url" type="url" placeholder="https://seu-backend.onrender.com">
+      <label for="urls">Links das matérias</label>
+      <textarea id="urls" placeholder="Cole um link por linha...\n\nEx.: https://maisesports.com.br/...\nhttps://www.sheepesports.com/..." autofocus></textarea>
 
-      <label for="urls">Links das entrevistas</label>
-      <textarea id="urls" placeholder="Cole um link por linha..."></textarea>
-
-      <div class="grid">
-        <div>
-          <label for="tournament">Torneio</label>
-          <input id="tournament" value="CBLOL 2026 Split 2">
-        </div>
-        <div>
-          <label for="publication">Publicação</label>
-          <input id="publication" value="Mais Esports">
-        </div>
-        <div>
-          <label for="type">Tipo</label>
-          <input id="type" value="Interview">
-        </div>
-        <div>
-          <label for="isvideo">É vídeo?</label>
-          <select id="isvideo">
-            <option value="No" selected>Não</option>
-            <option value="Yes">Sim</option>
-          </select>
-        </div>
-      </div>
-
-      <label for="translator">Tradutor</label>
-      <input id="translator" value="">
+      <p class="hint">
+        Publicação, torneio, tipo de conteúdo, tradutor e vídeo são detectados automaticamente.
+      </p>
 
       <div class="actions">
         <button id="scrape">Gerar Templates</button>
-        <button id="clear" class="secondary">Limpar histórico</button>
+        <button id="clear" class="secondary">Limpar</button>
       </div>
 
       <p id="status" class="status"></p>

@@ -3,8 +3,10 @@ from flask_cors import CORS
 import requests
 from bs4 import BeautifulSoup
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
+from urllib.parse import urlparse
 import re
+import unicodedata
 from collections import defaultdict
 
 app = Flask(__name__)
@@ -93,9 +95,41 @@ STOPWORDS = [
     'Cinco','Nenhum'
 ]
 
+PUBLICATIONS = {
+    "maisesports.com.br": "Mais Esports",
+    "www.maisesports.com.br": "Mais Esports",
+    "sheepesports.com": "Sheep Esports",
+    "www.sheepesports.com": "Sheep Esports",
+}
+
+# Datas oficiais de 2026. Para novos anos, basta adicionar três entradas aqui.
+# As margens permitem que entrevistas publicadas alguns dias depois de uma
+# rodada/final ainda sejam associadas ao torneio correto.
+TOURNAMENT_CALENDAR = {
+    2026: [
+        {"name": "CBLOL Cup 2026", "start": "2026-01-17", "end": "2026-03-01"},
+        {"name": "CBLOL 2026 Split 1", "start": "2026-03-28", "end": "2026-06-06"},
+        {"name": "CBLOL 2026 Split 2", "start": "2026-07-25", "end": "2026-10-03"},
+    ]
+}
+
+INTERVIEW_TITLE_MARKERS = (
+    "diz", "afirma", "fala", "conta", "revela", "comenta", "explica",
+    "avalia", "detalha", "admite", "destaca", "comenta sobre"
+)
+ARTICLE_TITLE_MARKERS = (
+    "confira", "resultado", "classificação", "tabela", "calendário",
+    "anuncia", "anunciado", "contrata", "contratação", "escalação",
+    "line-up", "roster", "mercado", "rumor"
+)
+
+TRANSLATOR_PATTERNS = [
+    re.compile(r"(?:tradu[cç][aã]o|traduzido|traduzida|translator|translation)\s*(?:por|by|:)?\s*([A-ZÀ-Ý][^.!?\n]{1,80})", re.I),
+]
+
 DEFAULT_CONFIG = {
-    "tournament": "CBLOL 2026 Split 2",
-    "publication": "Mais Esports",
+    "tournament": "",
+    "publication": "",
     "type": "Interview",
     "isvideo": "No",
     "translator": ""
@@ -104,11 +138,99 @@ DEFAULT_CONFIG = {
 def parse_date(value):
     if not value:
         return None
-    value = value.strip()
+    value = str(value).strip()
     try:
         return datetime.fromisoformat(value.replace('Z', '+00:00')).replace(tzinfo=None)
-    except ValueError:
+    except (ValueError, TypeError):
         return None
+
+def normalize_text(value):
+    value = unicodedata.normalize('NFKD', value or '')
+    return ''.join(c for c in value if not unicodedata.combining(c)).lower()
+
+def detect_publication(url):
+    hostname = urlparse(url).hostname or ''
+    hostname = hostname.lower().removeprefix('www.')
+    return PUBLICATIONS.get(hostname, '')
+
+def detect_tournament(date_published, title, content_text, url):
+    """Detecta o torneio por sinais explícitos e, depois, pela data."""
+    text = normalize_text(f"{title} {content_text} {url}")
+    year_match = re.search(r'\b(20\d{2})\b', text)
+    year = int(year_match.group(1)) if year_match else (date_published.year if date_published else None)
+
+    if year:
+        explicit = [
+            (rf'cblol\s*(?:cup|copa)\s*{year}', f'CBLOL Cup {year}'),
+            (rf'cblol\s*{year}\s*split\s*1', f'CBLOL {year} Split 1'),
+            (rf'cblol\s*{year}\s*split\s*2', f'CBLOL {year} Split 2'),
+            (rf'cblol\s*(?:1|1a|1ª|primeira)\s*(?:etapa|etapa)', f'CBLOL {year} Split 1'),
+            (rf'cblol\s*(?:2|2a|2ª|segunda)\s*(?:etapa|etapa)', f'CBLOL {year} Split 2'),
+        ]
+        for pattern, name in explicit:
+            if re.search(pattern, text):
+                return name
+
+    tournaments = TOURNAMENT_CALENDAR.get(year, []) if year else []
+    if date_published:
+        for tournament in tournaments:
+            start = datetime.fromisoformat(tournament['start'])
+            end = datetime.fromisoformat(tournament['end']) + timedelta(days=7)
+            if start <= date_published <= end:
+                return tournament['name']
+
+    return ''
+
+def detect_type(title, content_text):
+    title_n = normalize_text(title)
+    content_n = normalize_text(content_text)
+
+    if any(marker in title_n for marker in INTERVIEW_TITLE_MARKERS):
+        return 'Interview'
+    if 'entrevista' in title_n or 'interview' in title_n:
+        return 'Interview'
+    if re.search(r'\b(pergunta|responde|question|answer)\b', content_n):
+        return 'Interview'
+    if any(marker in title_n for marker in ARTICLE_TITLE_MARKERS):
+        return 'Article'
+    return 'Interview' if 'diz' in title_n else 'Article'
+
+def detect_translator(content_text):
+    for pattern in TRANSLATOR_PATTERNS:
+        match = pattern.search(content_text)
+        if match:
+            name = match.group(1).strip(' -:')
+            name = re.split(r'\s{2,}|\n', name)[0].strip()
+            if name:
+                return name
+    return ''
+
+def detect_video(soup):
+    og_type = soup.find('meta', attrs={'property': 'og:type'})
+    if og_type and 'video' in (og_type.get('content') or '').lower():
+        return 'Yes'
+
+    if soup.find('video'):
+        return 'Yes'
+
+    for iframe in soup.find_all('iframe'):
+        src = (iframe.get('src') or '').lower()
+        if any(host in src for host in ('youtube.com', 'youtu.be', 'youtube-nocookie.com', 'vimeo.com')):
+            return 'Yes'
+
+    for script in soup.find_all('script', type='application/ld+json'):
+        try:
+            data = json.loads(script.string or script.get_text())
+            items = data.get('@graph', [data]) if isinstance(data, dict) else data
+            if isinstance(items, dict):
+                items = [items]
+            if isinstance(items, list):
+                if any(isinstance(item, dict) and item.get('@type') in ('VideoObject', 'Video') for item in items):
+                    return 'Yes'
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    return 'No'
 
 def scrape_article(url):
     try:
@@ -178,13 +300,24 @@ def scrape_article(url):
                 if part in TEAM_MAP:
                     found_teams.add(TEAM_MAP[part])
 
+        publication = detect_publication(url)
+        tournament = detect_tournament(date_published, title, content_text, url)
+        content_type = detect_type(title, content_text)
+        translator = detect_translator(content_text)
+        isvideo = detect_video(soup)
+
         return {
             'url': url,
             'title': title_clean,
             'players': ", ".join(sorted(set(found_players))),
             'teams': ", ".join(sorted(found_teams)),
             'author': author_formatted,
-            'date': date_published.strftime('%Y-%m-%d')
+            'date': date_published.strftime('%Y-%m-%d'),
+            'tournament': tournament,
+            'publication': publication,
+            'type': content_type,
+            'translator': translator,
+            'isvideo': isvideo
         }
 
     except requests.RequestException as exc:
@@ -192,31 +325,22 @@ def scrape_article(url):
     except Exception as exc:
         return {'url': url, 'error': f'Erro ao processar a página: {exc}'}
 
-def make_template(res, config):
+def make_template(res):
     return (
         "{{ExternalContent/Line\n"
         f"|url={res['url']}\n"
         f"|title={res['title']}\n"
         f"|players={res['players']}\n"
         f"|teams={res['teams']}\n"
-        f"|tournament={config['tournament']}\n"
-        f"|publication={config['publication']}\n"
+        f"|tournament={res['tournament']}\n"
+        f"|publication={res['publication']}\n"
         f"|author={res['author']}\n"
-        f"|translator={config['translator']}\n"
-        f"|type={config['type']}\n"
-        f"|isvideo={config['isvideo']}\n"
+        f"|translator={res['translator']}\n"
+        f"|type={res['type']}\n"
+        f"|isvideo={res['isvideo']}\n"
         "}}"
     )
 
-@app.get('/')
-def home():
-    return jsonify({
-        "name": "Leaguepedia Interview Scraper API",
-        "status": "online",
-        "health": "/api/health",
-        "scrape": "/api/scrape"
-    })
-    
 @app.get('/api/health')
 def health():
     return jsonify({"status": "ok"})
@@ -225,7 +349,6 @@ def health():
 def scrape():
     payload = request.get_json(silent=True) or {}
     urls = payload.get('urls', [])
-    config = {**DEFAULT_CONFIG, **(payload.get('config') or {})}
 
     if not isinstance(urls, list):
         return jsonify({"error": "urls deve ser uma lista."}), 400
@@ -242,7 +365,7 @@ def scrape():
     for url in urls:
         result = scrape_article(url)
         if 'error' not in result:
-            result['template'] = make_template(result, config)
+            result['template'] = make_template(result)
         results.append(result)
 
     grouped = defaultdict(list)
@@ -253,7 +376,6 @@ def scrape():
     return jsonify({
         "results": results,
         "grouped": dict(sorted(grouped.items())),
-        "config": config
     })
 
 if __name__ == '__main__':

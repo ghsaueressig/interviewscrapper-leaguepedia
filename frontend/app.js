@@ -1,53 +1,53 @@
-const apiInput = document.getElementById("api-url");
+const API_URL = "https://interviewscrapper-leaguepedia.onrender.com";
+
 const urlsInput = document.getElementById("urls");
 const statusEl = document.getElementById("status");
 const resultsEl = document.getElementById("results");
 
-const fields = {
-  tournament: document.getElementById("tournament"),
-  publication: document.getElementById("publication"),
-  type: document.getElementById("type"),
-  isvideo: document.getElementById("isvideo"),
-  translator: document.getElementById("translator")
-};
+function addDetectedInfo(wrapper, item) {
+  const info = document.createElement("div");
+  info.className = "detected-info";
 
-apiInput.value = localStorage.getItem("leaguepedia_api_url") || "";
+  const values = [
+    ["Publicação", item.publication || "Desconhecida"],
+    ["Tipo", item.type || "Desconhecido"],
+    ["Torneio", item.tournament || "Não identificado"],
+    ["Jogador(es)", item.players || "Não identificado"],
+    ["Equipe(s)", item.teams || "Não identificada"],
+    ["Data", item.date || "Não identificada"],
+    ["Tradutor", item.translator || "Nenhum"],
+    ["Vídeo", item.isvideo === "Yes" ? "Sim" : "Não"]
+  ];
+
+  for (const [label, value] of values) {
+    const span = document.createElement("span");
+    span.innerHTML = `<strong>${label}:</strong> `;
+    span.appendChild(document.createTextNode(value));
+    info.appendChild(span);
+  }
+
+  wrapper.appendChild(info);
+}
 
 document.getElementById("scrape").addEventListener("click", async () => {
-  const api = apiInput.value.trim().replace(/\/+$/, "");
   const urls = urlsInput.value
     .split("\n")
     .map(x => x.trim())
     .filter(Boolean);
-
-  if (!api) {
-    statusEl.textContent = "Informe a URL da API.";
-    return;
-  }
 
   if (!urls.length) {
     statusEl.textContent = "Cole pelo menos uma URL.";
     return;
   }
 
-  localStorage.setItem("leaguepedia_api_url", api);
   statusEl.textContent = `Processando ${urls.length} link(s)...`;
   resultsEl.innerHTML = "";
 
   try {
-    const response = await fetch(`${api}/api/scrape`, {
+    const response = await fetch(`${API_URL}/api/scrape`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        urls,
-        config: {
-          tournament: fields.tournament.value,
-          publication: fields.publication.value,
-          type: fields.type.value,
-          isvideo: fields.isvideo.value,
-          translator: fields.translator.value
-        }
-      })
+      body: JSON.stringify({urls})
     });
 
     const data = await response.json();
@@ -78,6 +78,8 @@ document.getElementById("scrape").addEventListener("click", async () => {
         const title = document.createElement("strong");
         title.textContent = item.title || item.url;
         wrapper.appendChild(title);
+
+        addDetectedInfo(wrapper, item);
 
         const textarea = document.createElement("textarea");
         textarea.readOnly = true;
