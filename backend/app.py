@@ -208,6 +208,15 @@ def make_template(res, config):
         "}}"
     )
 
+@app.get('/')
+def home():
+    return jsonify({
+        "name": "Leaguepedia Interview Scraper API",
+        "status": "online",
+        "health": "/api/health",
+        "scrape": "/api/scrape"
+    })
+    
 @app.get('/api/health')
 def health():
     return jsonify({"status": "ok"})
