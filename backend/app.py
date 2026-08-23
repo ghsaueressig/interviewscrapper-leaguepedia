@@ -25,7 +25,6 @@ from data.publications import (
     PUBLICATIONS,
     WRITTEN_PUBLICATIONS,
     VIDEO_DOMAINS,
-    VIDEO_EMBED_DOMAINS,
 )
 
 from data.tournaments import (
@@ -150,7 +149,7 @@ def detect_video(url, soup):
 
         if any(
             host in src
-            for host in VIDEO_EMBED_DOMAINS
+                for host in VIDEO_DOMAINS
         ):
             return 'Yes'
 
