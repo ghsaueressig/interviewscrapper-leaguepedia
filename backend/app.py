@@ -10,6 +10,8 @@ import re
 import unicodedata
 from collections import defaultdict
 
+MAX_URLS_PER_REQUEST = 10
+
 app = Flask(__name__)
 CORS(app)
 
@@ -668,30 +670,47 @@ def scrape():
     urls = payload.get('urls', [])
 
     if not isinstance(urls, list):
-        return jsonify({"error": "urls deve ser uma lista."}), 400
+        return jsonify({
+            "error": "urls deve ser uma lista."
+        }), 400
 
+    # Remove URLs duplicadas e inválidas
     urls = list(dict.fromkeys(
         u.strip() for u in urls
-        if isinstance(u, str) and u.strip().startswith(('http://', 'https://'))
+        if isinstance(u, str)
+        and u.strip().startswith(('http://', 'https://'))
     ))
 
     if not urls:
-        return jsonify({"error": "Nenhuma URL válida foi enviada."}), 400
+        return jsonify({
+            "error": "Nenhuma URL válida foi enviada."
+        }), 400
+
+    # Limite de URLs por requisição
+    if len(urls) > MAX_URLS_PER_REQUEST:
+        return jsonify({
+            "error": (
+                f"O máximo permitido é "
+                f"{MAX_URLS_PER_REQUEST} URLs por requisição."
+            )
+        }), 400
 
     results = []
+
     for url in urls:
 
-    if is_youtube_url(url):
-        result = scrape_youtube(url)
-    else:
-        result = scrape_article(url)
+        if is_youtube_url(url):
+            result = scrape_youtube(url)
+        else:
+            result = scrape_article(url)
 
-    if 'error' not in result:
-        result['template'] = make_template(result)
+        if 'error' not in result:
+            result['template'] = make_template(result)
 
-    results.append(result)
+        results.append(result)
 
     grouped = defaultdict(list)
+
     for result in results:
         if 'error' not in result:
             grouped[result['date']].append(result)
@@ -700,6 +719,3 @@ def scrape():
         "results": results,
         "grouped": dict(sorted(grouped.items())),
     })
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
