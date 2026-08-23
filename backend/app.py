@@ -274,6 +274,170 @@ def detect_video(url, soup):
 
     return 'No'
 
+def is_youtube_url(url):
+    hostname = (urlparse(url).hostname or '').lower().removeprefix('www.')
+
+    youtube_domains = {
+        'youtube.com',
+        'youtu.be',
+        'youtube-nocookie.com'
+    }
+
+    return any(
+        hostname == domain or hostname.endswith('.' + domain)
+        for domain in youtube_domains
+    )
+
+
+def find_interviewee_in_text(text):
+    """
+    Procura padrões explícitos de entrevista antes de procurar
+    simplesmente todos os jogadores mencionados.
+    """
+
+    patterns = [
+        r'em entrevista ao mais esports,\s*([^,.\n]+)',
+        r'em entrevista para o mais esports,\s*([^,.\n]+)',
+        r'conversamos com\s*([^,.\n]+)',
+        r'entrevista com\s*([^,.\n]+)',
+    ]
+
+    text_normalized = normalize_text(text)
+
+    for pattern in patterns:
+        match = re.search(pattern, text_normalized, re.IGNORECASE)
+
+        if not match:
+            continue
+
+        possible_name = match.group(1).strip()
+
+        possible_name = re.sub(
+            r'\b(fala|falou|comenta|comentou|conta|contou|revela|revelou|diz)\b.*$',
+            '',
+            possible_name
+        ).strip()
+
+        possible_name_normalized = normalize_text(possible_name)
+
+        for player_key, player_data in PLAYER_DATA.items():
+            if (
+                player_key == possible_name_normalized
+                or player_key in possible_name_normalized.split()
+            ):
+                return player_key
+
+    return None
+
+
+def detect_players_from_text(text):
+    """
+    Fallback para encontrar jogadores conhecidos mencionados no texto.
+    """
+    text_normalized = normalize_text(text)
+    found = []
+
+    for player_key in PLAYER_DATA:
+        pattern = rf'\b{re.escape(player_key)}\b'
+
+        if re.search(pattern, text_normalized, re.IGNORECASE):
+            found.append(player_key)
+
+    return found
+
+
+def scrape_youtube(url):
+    try:
+        metadata = get_youtube_metadata(url)
+
+        if metadata.get('error'):
+            return {
+                'url': url,
+                'error': metadata['error']
+            }
+
+        title = metadata.get('title') or ''
+        description = metadata.get('description') or ''
+        tags = metadata.get('tags') or []
+
+        combined_text = " ".join([
+            title,
+            description,
+            " ".join(tags)
+        ])
+
+        date_published = parse_date(metadata.get('published_at'))
+
+        if not date_published:
+            date_published = datetime.now()
+
+        # Primeiro tentamos identificar explicitamente o entrevistado.
+        interviewee_key = find_interviewee_in_text(description)
+
+        # Se não houver padrão explícito, procuramos jogadores no texto.
+        if not interviewee_key:
+            detected_players = detect_players_from_text(
+                f"{title} {description}"
+            )
+
+            if len(detected_players) == 1:
+                interviewee_key = detected_players[0]
+
+        found_players = []
+        found_teams = set()
+
+        if interviewee_key and interviewee_key in PLAYER_DATA:
+            found_players.append(
+                PLAYER_DATA[interviewee_key]['wiki']
+            )
+
+            found_teams.add(
+                PLAYER_DATA[interviewee_key]['team']
+            )
+
+        # Detectar tipo do conteúdo.
+        content_type = detect_type(title, description)
+
+        # A frase explícita usada pelo Mais Esports deve ter prioridade.
+        if 'em entrevista ao mais esports' in normalize_text(description):
+            content_type = 'Interview'
+
+        tournament = detect_tournament(
+            date_published,
+            title,
+            combined_text,
+            url
+        )
+
+        translator = detect_translator(description)
+
+        return {
+            'url': url,
+            'title': title.replace('|', '{{!}}'),
+            'players': ", ".join(found_players),
+            'teams': ", ".join(sorted(found_teams)),
+            'author': metadata.get('channel') or '',
+            'date': date_published.strftime('%Y-%m-%d'),
+
+            # Regra específica da Leaguepedia para vídeos.
+            'publication': 'YouTube',
+            'tournament': tournament,
+            'type': content_type,
+            'translator': translator,
+            'isvideo': 'Yes',
+
+            # Informações extras úteis para debug/futuro.
+            'video_id': metadata.get('video_id'),
+            'duration': metadata.get('duration'),
+            'captions_available': metadata.get('captions_available')
+        }
+
+    except Exception as exc:
+        return {
+            'url': url,
+            'error': f'Erro ao processar vídeo do YouTube: {exc}'
+        }
+
 def scrape_article(url):
     try:
         headers = {
@@ -428,10 +592,16 @@ def scrape():
 
     results = []
     for url in urls:
+
+    if is_youtube_url(url):
+        result = scrape_youtube(url)
+    else:
         result = scrape_article(url)
-        if 'error' not in result:
-            result['template'] = make_template(result)
-        results.append(result)
+
+    if 'error' not in result:
+        result['template'] = make_template(result)
+
+    results.append(result)
 
     grouped = defaultdict(list)
     for result in results:
