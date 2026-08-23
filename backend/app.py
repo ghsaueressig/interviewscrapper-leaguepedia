@@ -345,6 +345,53 @@ def detect_players_from_text(text):
 
     return found
 
+def detect_youtube_content_type(title, description):
+    """
+    Classifica vídeos do YouTube especificamente para uso na Leaguepedia.
+
+    Interview:
+    - Entrevistas e conversas com jogadores/pessoas do cenário.
+
+    Article:
+    - Especiais, documentários, reportagens e outros conteúdos editoriais.
+
+    Unknown:
+    - Conteúdo que não conseguimos classificar com segurança.
+    """
+    text = normalize_text(f"{title} {description}")
+    interview_patterns = [
+        "em entrevista ao",
+        "em entrevista para",
+        "entrevista com",
+        "entrevista ao",
+        "entrevistamos",
+        "conversamos com",
+        "conversa com",
+        "bate papo com",
+        "bate-papo com",
+        "papo com",
+    ]
+    if any(pattern in text for pattern in interview_patterns):
+        return "Interview"
+    article_patterns = [
+        "especial",
+        "documentario",
+        "reportagem",
+        "a historia de",
+        "historia de",
+        "a trajetoria de",
+        "trajetoria de",
+        "retrospectiva",
+        "bastidores",
+        "por dentro",
+        "como foi",
+        "conheca",
+        "conheça",
+    ]
+
+    if any(pattern in text for pattern in article_patterns):
+        return "Article"
+    return ""
 
 def scrape_youtube(url):
     try:
@@ -386,6 +433,52 @@ def scrape_youtube(url):
         found_players = []
         found_teams = set()
 
+    if content_type == "Interview":
+
+    # Primeiro tentamos encontrar explicitamente o entrevistado
+    interviewee_key = find_interviewee_in_text(description)
+
+    # Fallback: procurar jogadores no título + descrição
+    if not interviewee_key:
+        detected_players = detect_players_from_text(
+            f"{title} {description}"
+        )
+
+        # Só usamos automaticamente se houver apenas um candidato
+        if len(detected_players) == 1:
+            interviewee_key = detected_players[0]
+
+    # Adicionar somente o entrevistado principal
+    if interviewee_key and interviewee_key in PLAYER_DATA:
+        found_players.append(
+            PLAYER_DATA[interviewee_key]["wiki"]
+        )
+
+        found_teams.add(
+            PLAYER_DATA[interviewee_key]["team"]
+        )
+
+    elif content_type == "Article":
+
+    detected_players = detect_players_from_text(
+        f"{title} {description}"
+    )
+
+    for player_key in detected_players:
+
+        if player_key not in PLAYER_DATA:
+            continue
+
+        player = PLAYER_DATA[player_key]
+
+        found_players.append(
+            player["wiki"]
+        )
+
+        found_teams.add(
+            player["team"]
+        )
+
         if interviewee_key and interviewee_key in PLAYER_DATA:
             found_players.append(
                 PLAYER_DATA[interviewee_key]['wiki']
@@ -395,12 +488,7 @@ def scrape_youtube(url):
                 PLAYER_DATA[interviewee_key]['team']
             )
 
-        # Detectar tipo do conteúdo.
-        content_type = detect_type(title, description)
-
-        # A frase explícita usada pelo Mais Esports deve ter prioridade.
-        if 'em entrevista ao mais esports' in normalize_text(description):
-            content_type = 'Interview'
+        content_type = detect_youtube_content_type(title,description)
 
         tournament = detect_tournament(
             date_published,
