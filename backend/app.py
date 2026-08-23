@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from youtube_metadata import get_youtube_metadata
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -10,140 +9,43 @@ import re
 import unicodedata
 from collections import defaultdict
 
-MAX_URLS_PER_REQUEST = 10
+from data.players import PLAYER_DATA
+from data.teams import TEAM_MAP
+
+from data.content import (
+    STOPWORDS,
+    INTERVIEW_TITLE_MARKERS,
+    ARTICLE_TITLE_MARKERS,
+    TRANSLATOR_PATTERNS,
+    YOUTUBE_INTERVIEW_PATTERNS,
+    YOUTUBE_ARTICLE_PATTERNS,
+)
+
+from data.publications import (
+    PUBLICATIONS,
+    WRITTEN_PUBLICATIONS,
+    VIDEO_DOMAINS,
+)
+
+from data.tournaments import (
+    TOURNAMENT_CALENDAR,
+    TOURNAMENT_PATTERNS,
+)
+
+from data.authors import AUTHOR_MAPPINGS
+
+from data.content_patterns import (
+    TRANSLATOR_PATTERNS,
+    INTERVIEW_TITLE_MARKERS,
+)
+
+from data.config import (
+    DEFAULT_CONFIG,
+    MAX_URLS_PER_REQUEST,
+)
 
 app = Flask(__name__)
 CORS(app)
-
-TEAM_MAP = {
-    'pain': 'paiN Gaming',
-    'los': 'LOS',
-    'loud': 'LOUD',
-    'furia': 'FURIA',
-    'red': 'RED Canids',
-    'vks': 'Vivo Keyd Stars',
-    'fx': 'Fluxo W7M',
-    'fluxo': 'Fluxo W7M',
-    'fxw7m': 'Fluxo W7M',
-    'w7m': 'Fluxo W7M',
-    'lev': 'Leviatán'
-}
-
-PLAYER_DATA = {
-    'zothve': {'wiki': 'Zothve', 'team': 'Fluxo W7M'},
-    'peach': {'wiki': 'Peach (Lee Min-gyu)', 'team': 'Fluxo W7M'},
-    'cody': {'wiki': 'Cody', 'team': 'Fluxo W7M'},
-    'bao': {'wiki': 'BAO (Jeong Hyeon-woo)', 'team': 'Fluxo W7M'},
-    'momochi': {'wiki': 'Momochi', 'team': 'Fluxo W7M'},
-    'guchi': {'wiki': 'Guchi', 'team': 'Fluxo W7M'},
-    'nothing': {'wiki': 'Nothing', 'team': 'Fluxo W7M'},
-    'guigo': {'wiki': 'Guigo', 'team': 'FURIA'},
-    'tatu': {'wiki': 'Tatu (Pedro Seixas)', 'team': 'FURIA'},
-    'tutsz': {'wiki': 'Tutsz', 'team': 'FURIA'},
-    'ayu': {'wiki': 'Ayu (Andrey Saraiva)', 'team': 'FURIA'},
-    'jojo': {'wiki': 'JoJo (Gabriel Dzelme)', 'team': 'FURIA'},
-    'furyz': {'wiki': 'Furyz', 'team': 'FURIA'},
-    'luuukz': {'wiki': 'Luuukz', 'team': 'FURIA'},
-    'lanterninho': {'wiki': 'Lanterninho', 'team': 'FURIA'},
-    'devost': {'wiki': 'Devost', 'team': 'Leviatán'},
-    'booki': {'wiki': 'Booki', 'team': 'Leviatán'},
-    'enga': {'wiki': 'Enga', 'team': 'Leviatán'},
-    'strensh': {'wiki': 'Strensh', 'team': 'Leviatán'},
-    'shiku': {'wiki': 'Shiku', 'team': 'Leviatán'},
-    'kouke': {'wiki': 'Kouke', 'team': 'Leviatán'},
-    'lautaloval': {'wiki': 'LautaLoval', 'team': 'Leviatán'},
-    'xyno': {'wiki': 'Xyno', 'team': 'LOUD'},
-    'sinatra': {'wiki': 'Sinatra', 'team': 'LOUD'},
-    'kaze': {'wiki': 'Kaze (Lucas Fe)', 'team': 'LOUD'},
-    'rabelo': {'wiki': 'Rabelo', 'team': 'LOUD'},
-    'uzent': {'wiki': 'uZent', 'team': 'LOUD'},
-    'raise': {'wiki': 'Raise', 'team': 'LOUD'},
-    'sephis': {'wiki': 'Sephis', 'team': 'LOUD'},
-    'zest': {'wiki': 'Zest (Kim Dong-min)', 'team': 'LOS'},
-    'curse': {'wiki': 'Curse (Raí Yamada)', 'team': 'LOS'},
-    'feisty': {'wiki': 'Feisty', 'team': 'LOS'},
-    'duduhh': {'wiki': 'Duduhh', 'team': 'LOS'},
-    'ackerman': {'wiki': 'Ackerman (Gabriel Aparicio)', 'team': 'LOS'},
-    'enatron': {'wiki': 'Enatron', 'team': 'LOS'},
-    'invokid': {'wiki': 'Invokid', 'team': 'LOS'},
-    'brandao': {'wiki': 'Brandão', 'team': 'LOS'},
-    'boal': {'wiki': 'Boal', 'team': 'paiN Gaming'},
-    'cariok': {'wiki': 'Cariok', 'team': 'paiN Gaming'},
-    'keine': {'wiki': 'Keine', 'team': 'paiN Gaming'},
-    'hena': {'wiki': 'Hena', 'team': 'paiN Gaming'},
-    'ceos': {'wiki': 'Ceos', 'team': 'paiN Gaming'},
-    'xero': {'wiki': 'Xero', 'team': 'paiN Gaming'},
-    'sarkis': {'wiki': 'Sarkis', 'team': 'paiN Gaming'},
-    'von': {'wiki': 'Von (Gabriel Barbosa)', 'team': 'paiN Gaming'},
-    'zynts': {'wiki': 'Zynts', 'team': 'RED Canids'},
-    'stepz': {'wiki': 'STEPZ (Eloy Rodríguez)', 'team': 'RED Canids'},
-    'fuuu': {'wiki': 'Fuuu', 'team': 'RED Canids'},
-    'morttheus': {'wiki': 'Morttheus', 'team': 'RED Canids'},
-    'frosty': {'wiki': 'Frosty (José Eduardo)', 'team': 'RED Canids'},
-    'manel': {'wiki': 'Manel', 'team': 'RED Canids'},
-    'tockers': {'wiki': 'Tockers', 'team': 'RED Canids'},
-    'beellzy': {'wiki': 'BeellzY', 'team': 'RED Canids'},
-    'vinicin': {'wiki': 'Vinicin', 'team': 'RED Canids'},
-    'zekas': {'wiki': 'zekas', 'team': 'Vivo Keyd Stars'},
-    'disamis': {'wiki': 'Disamis', 'team': 'Vivo Keyd Stars'},
-    'mireu': {'wiki': 'Mireu', 'team': 'Vivo Keyd Stars'},
-    'jeskla': {'wiki': 'Jeskla', 'team': 'Vivo Keyd Stars'},
-    'scamber': {'wiki': 'scamber', 'team': 'Vivo Keyd Stars'},
-    'smiley': {'wiki': 'Smiley (Ludvig Granquist)', 'team': 'Vivo Keyd Stars'},
-    'benvi': {'wiki': 'Benvi', 'team': 'Vivo Keyd Stars'}
-}
-
-STOPWORDS = [
-    'Diz','Sobre','Para','Com','Pelo','Pela','Das','Dos','Nas','Nos','Uma',
-    'Gente','Apos','Nada','Hoje','Isso','Esta','Tava','Tudo','Mais','Seu',
-    'Sua','Como','Pode','Sido','Erro','Parte','Dessa','Troca','Acho','Seja',
-    'Por','Vitoria','Seguida','Decima','Derrota','Momento','Bastidores',
-    'Turbulento','Confira','Completa','Coletiva','Desabafo','Criticas',
-    'Estilo','Ninguem','Mundo','Cansado','Narrativa','Ontem','Talvez',
-    'Minha','Sentir','Tempo','Preparacao','Outros','Pensam','Mudar','Renovar',
-    'Pior','Liga','Unido','Querer','Fazer','Acontecer','Lugar','Cabeca',
-    'Cinco','Nenhum'
-]
-
-PUBLICATIONS = {
-    "maisesports.com.br": "Mais Esports",
-    "www.maisesports.com.br": "Mais Esports",
-    "sheepesports.com": "Sheep Esports",
-    "www.sheepesports.com": "Sheep Esports",
-}
-
-# Datas oficiais de 2026. Para novos anos, basta adicionar três entradas aqui.
-# As margens permitem que entrevistas publicadas alguns dias depois de uma
-# rodada/final ainda sejam associadas ao torneio correto.
-TOURNAMENT_CALENDAR = {
-    2026: [
-        {"name": "CBLOL Cup 2026", "start": "2026-01-17", "end": "2026-03-01"},
-        {"name": "CBLOL 2026 Split 1", "start": "2026-03-28", "end": "2026-06-06"},
-        {"name": "CBLOL 2026 Split 2", "start": "2026-07-25", "end": "2026-10-03"},
-    ]
-}
-
-INTERVIEW_TITLE_MARKERS = (
-    "diz", "afirma", "fala", "conta", "revela", "comenta", "explica",
-    "avalia", "detalha", "admite", "destaca", "comenta sobre"
-)
-ARTICLE_TITLE_MARKERS = (
-    "confira", "resultado", "classificação", "tabela", "calendário",
-    "anuncia", "anunciado", "contrata", "contratação", "escalação",
-    "line-up", "roster", "mercado", "rumor"
-)
-
-TRANSLATOR_PATTERNS = [
-    re.compile(r"(?:tradu[cç][aã]o|traduzido|traduzida|translator|translation)\s*(?:por|by|:)?\s*([A-ZÀ-Ý][^.!?\n]{1,80})", re.I),
-]
-
-DEFAULT_CONFIG = {
-    "tournament": "",
-    "publication": "",
-    "type": "Interview",
-    "isvideo": "No",
-    "translator": ""
-}
 
 def parse_date(value):
     if not value:
@@ -214,7 +116,6 @@ def detect_translator(content_text):
             if name:
                 return name
     return ''
-
 def detect_video(url, soup):
     """Detecta vídeo priorizando a plataforma de origem.
 
@@ -222,25 +123,30 @@ def detect_video(url, soup):
     ferramenta são considerados conteúdo escrito. Plataformas conhecidas de
     vídeo são consideradas vídeo. Outros domínios usam heurísticas do HTML.
     """
-    hostname = (urlparse(url).hostname or '').lower().removeprefix('www.')
+    hostname = (
+        urlparse(url).hostname or ''
+    ).lower().removeprefix('www.')
 
-    written_publications = {'maisesports.com.br', 'sheepesports.com'}
-    video_domains = {
-        'youtube.com', 'youtu.be', 'youtube-nocookie.com',
-        'vimeo.com', 'twitch.tv', 'kick.com', 'streamable.com'
-    }
-
-    # Regra explícita para as duas fontes principais da ferramenta.
-    if hostname in written_publications:
+    # Fontes principais da ferramenta são conteúdo escrito.
+    if hostname in WRITTEN_PUBLICATIONS:
         return 'No'
 
-    # Regra explícita para plataformas de vídeo (inclui subdomínios).
-    if any(hostname == domain or hostname.endswith('.' + domain) for domain in video_domains):
+    # Plataformas conhecidas de vídeo.
+    if any(
+        hostname == domain or hostname.endswith('.' + domain)
+        for domain in VIDEO_DOMAINS
+    ):
         return 'Yes'
 
-    # Para domínios ambíguos (ex.: redes sociais), usamos os sinais da página.
-    og_type = soup.find('meta', attrs={'property': 'og:type'})
-    if og_type and 'video' in (og_type.get('content') or '').lower():
+    # Domínios ambíguos usam sinais da página.
+    og_type = soup.find(
+        'meta',
+        attrs={'property': 'og:type'}
+    )
+
+    if og_type and 'video' in (
+        og_type.get('content') or ''
+    ).lower():
         return 'Yes'
 
     if soup.find('video'):
@@ -248,29 +154,52 @@ def detect_video(url, soup):
 
     for iframe in soup.find_all('iframe'):
         src = (iframe.get('src') or '').lower()
-        if any(host in src for host in (
-            'youtube.com', 'youtu.be', 'youtube-nocookie.com',
-            'vimeo.com', 'twitch.tv', 'player.twitch.tv', 'kick.com'
-        )):
+
+        if any(
+            host in src
+            for host in VIDEO_EMBED_DOMAINS
+        ):
             return 'Yes'
 
-    for script in soup.find_all('script', type='application/ld+json'):
+    for script in soup.find_all(
+        'script',
+        type='application/ld+json'
+    ):
         try:
-            data = json.loads(script.string or script.get_text())
-            items = data.get('@graph', [data]) if isinstance(data, dict) else data
+            data = json.loads(
+                script.string or script.get_text()
+            )
+
+            items = (
+                data.get('@graph', [data])
+                if isinstance(data, dict)
+                else data
+            )
+
             if isinstance(items, dict):
                 items = [items]
+
             if isinstance(items, list):
                 for item in items:
                     if not isinstance(item, dict):
                         continue
+
                     item_type = item.get('@type', '')
+
                     if isinstance(item_type, list):
-                        is_video = any(t in ('VideoObject', 'Video') for t in item_type)
+                        is_video = any(
+                            t in ('VideoObject', 'Video')
+                            for t in item_type
+                        )
                     else:
-                        is_video = item_type in ('VideoObject', 'Video')
+                        is_video = item_type in (
+                            'VideoObject',
+                            'Video'
+                        )
+
                     if is_video:
                         return 'Yes'
+
         except (json.JSONDecodeError, TypeError):
             pass
 
@@ -544,10 +473,12 @@ def scrape_article(url):
         title_clean = title.replace('|', '{{!}}')
 
         author_formatted = ""
-        if "Corres" in content_text or "Fiorini" in content_text:
-            author_formatted = '[[Self:Corres|Sérgio "Corres" Fiorini]]'
-        elif "Ian Teixeira" in content_text:
-            author_formatted = "[[Ian Teixeira]]"
+    def detect_author(content_text):
+        for author in AUTHOR_MAPPINGS:
+            if any(name in content_text for name in author["matches"]):
+                return author["wiki"]
+
+        return ""
 
         date_published = None
 
