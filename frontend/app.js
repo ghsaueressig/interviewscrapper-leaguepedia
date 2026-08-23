@@ -36,7 +36,7 @@ https://youtube.com/...`,
     generateButton: "Gerar Templates",
     clearButton: "Limpar",
 
-    apiNote: `Para evitar uso excessivo da ferramenta, é possível processar até ${MAX_URLS} links por vez.`,
+    apiNote: `Para evitar uso excessivo da ferramenta, é possível processar até ${MAX_URLS} links por vez. Atualmente exclusivamente para CBLOL.`,
 
     publication: "Publicação",
     type: "Tipo",
@@ -95,7 +95,7 @@ https://youtube.com/...`,
     generateButton: "Generate Templates",
     clearButton: "Clear",
 
-    apiNote: `To help prevent excessive use, you can process up to ${MAX_URLS} links at a time.`,
+    apiNote: `To help prevent excessive use, you can process up to ${MAX_URLS} links at a time. Currently CBLOL exclusive`,
 
     publication: "Publication",
     type: "Type",
@@ -154,7 +154,7 @@ https://youtube.com/...`,
     generateButton: "Generar plantillas",
     clearButton: "Limpiar",
 
-    apiNote: `Para ayudar a evitar un uso excesivo, puedes procesar hasta ${MAX_URLS} enlaces a la vez.`,
+    apiNote: `Para ayudar a evitar un uso excesivo, puedes procesar hasta ${MAX_URLS} enlaces a la vez. Actuellement, exclusivement pour le CBLOL.`,
 
     publication: "Publicación",
     type: "Tipo",
