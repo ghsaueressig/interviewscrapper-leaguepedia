@@ -349,77 +349,80 @@ def scrape_youtube(url):
         if not date_published:
             date_published = datetime.now()
 
-        # Primeiro tentamos identificar explicitamente o entrevistado.
-        interviewee_key = find_interviewee_in_text(description)
-
-        # Se não houver padrão explícito, procuramos jogadores no texto.
-        if not interviewee_key:
-            detected_players = detect_players_from_text(
-                f"{title} {description}"
-            )
-
-            if len(detected_players) == 1:
-                interviewee_key = detected_players[0]
+        # Detecta primeiro o tipo de conteúdo.
+        content_type = detect_youtube_content_type(
+            title,
+            description
+        )
 
         found_players = []
         found_teams = set()
 
-    if content_type == "Interview":
+        # ==================================================
+        # INTERVIEW
+        # ==================================================
+        if content_type == "Interview":
 
-    # Primeiro tentamos encontrar explicitamente o entrevistado
-    interviewee_key = find_interviewee_in_text(description)
-
-    # Fallback: procurar jogadores no título + descrição
-    if not interviewee_key:
-        detected_players = detect_players_from_text(
-            f"{title} {description}"
-        )
-
-        # Só usamos automaticamente se houver apenas um candidato
-        if len(detected_players) == 1:
-            interviewee_key = detected_players[0]
-
-    # Adicionar somente o entrevistado principal
-    if interviewee_key and interviewee_key in PLAYER_DATA:
-        found_players.append(
-            PLAYER_DATA[interviewee_key]["wiki"]
-        )
-
-        found_teams.add(
-            PLAYER_DATA[interviewee_key]["team"]
-        )
-
-    elif content_type == "Article":
-
-    detected_players = detect_players_from_text(
-        f"{title} {description}"
-    )
-
-    for player_key in detected_players:
-
-        if player_key not in PLAYER_DATA:
-            continue
-
-        player = PLAYER_DATA[player_key]
-
-        found_players.append(
-            player["wiki"]
-        )
-
-        found_teams.add(
-            player["team"]
-        )
-
-        if interviewee_key and interviewee_key in PLAYER_DATA:
-            found_players.append(
-                PLAYER_DATA[interviewee_key]['wiki']
+            # Primeiro tentamos identificar explicitamente
+            # o entrevistado na descrição.
+            interviewee_key = find_interviewee_in_text(
+                description
             )
 
-            found_teams.add(
-                PLAYER_DATA[interviewee_key]['team']
+            # Fallback: procurar jogadores no título + descrição.
+            if not interviewee_key:
+                detected_players = detect_players_from_text(
+                    f"{title} {description}"
+                )
+
+                # Só usamos automaticamente se houver
+                # exatamente um candidato.
+                if len(detected_players) == 1:
+                    interviewee_key = detected_players[0]
+
+            # Para entrevistas, adicionamos somente
+            # o entrevistado principal.
+            if (
+                interviewee_key
+                and interviewee_key in PLAYER_DATA
+            ):
+                player = PLAYER_DATA[interviewee_key]
+
+                found_players.append(
+                    player["wiki"]
+                )
+
+                found_teams.add(
+                    player["team"]
+                )
+
+        # ==================================================
+        # ARTICLE / ESPECIAL
+        # ==================================================
+        elif content_type == "Article":
+
+            detected_players = detect_players_from_text(
+                f"{title} {description}"
             )
 
-        content_type = detect_youtube_content_type(title,description)
+            for player_key in detected_players:
+
+                if player_key not in PLAYER_DATA:
+                    continue
+
+                player = PLAYER_DATA[player_key]
+
+                found_players.append(
+                    player["wiki"]
+                )
+
+                found_teams.add(
+                    player["team"]
+                )
+
+        # ==================================================
+        # OUTRAS DETECÇÕES
+        # ==================================================
 
         tournament = detect_tournament(
             date_published,
@@ -428,7 +431,9 @@ def scrape_youtube(url):
             url
         )
 
-        translator = detect_translator(description)
+        translator = detect_translator(
+            description
+        )
 
         return {
             'url': url,
@@ -448,7 +453,9 @@ def scrape_youtube(url):
             # Informações extras úteis para debug/futuro.
             'video_id': metadata.get('video_id'),
             'duration': metadata.get('duration'),
-            'captions_available': metadata.get('captions_available')
+            'captions_available': metadata.get(
+                'captions_available'
+            )
         }
 
     except Exception as exc:
@@ -456,7 +463,7 @@ def scrape_youtube(url):
             'url': url,
             'error': f'Erro ao processar vídeo do YouTube: {exc}'
         }
-
+        
 def scrape_article(url):
     try:
         headers = {
