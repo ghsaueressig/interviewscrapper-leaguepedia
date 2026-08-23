@@ -1,134 +1,516 @@
-* { box-sizing: border-box; }
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100vh;
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
   background: #f4f6f8;
-  color: #20252b;
+  color: #1f2933;
 }
+
+
+/* =========================================================
+   LAYOUT
+========================================================= */
 
 .container {
-  width: min(1000px, 92%);
-  margin: 40px auto;
+  width: min(100% - 32px, 1000px);
+  margin: 0 auto;
+  padding: 48px 0 64px;
 }
 
-header { margin-bottom: 24px; }
 
-h1 { margin-bottom: 8px; }
+/* =========================================================
+   HEADER
+========================================================= */
 
-.card, .result-card {
-  background: white;
-  border-radius: 12px;
-  padding: 22px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+header {
+  margin-bottom: 28px;
 }
 
-label {
-  display: block;
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+h1 {
+  margin: 0 0 10px;
+
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1.1;
+}
+
+header p {
+  margin: 0;
+
+  color: #5f6b76;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+code {
+  padding: 2px 6px;
+
+  border-radius: 5px;
+
+  background: #e8edf2;
+
+  font-size: 0.9em;
+}
+
+
+/* =========================================================
+   LANGUAGE SELECTOR
+========================================================= */
+
+.language-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  flex-shrink: 0;
+}
+
+.language-selector label {
+  font-size: 0.9rem;
   font-weight: 600;
-  margin: 14px 0 6px;
+
+  color: #5f6b76;
 }
 
-input, textarea, select {
+.language-selector select {
+  padding: 8px 12px;
+
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+
+  background: white;
+
+  font-size: 0.95rem;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.card {
+  padding: 28px;
+
+  border: 1px solid #dde3e8;
+  border-radius: 14px;
+
+  background: white;
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+.card > label {
+  display: block;
+
+  margin-bottom: 10px;
+
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+
+/* =========================================================
+   URL TEXTAREA
+========================================================= */
+
+#urls {
   width: 100%;
-  border: 1px solid #ccd2d8;
-  border-radius: 7px;
-  padding: 10px 12px;
-  font: inherit;
-}
+  min-height: 220px;
 
-textarea {
-  min-height: 180px;
+  padding: 16px;
+
   resize: vertical;
+
+  border: 1px solid #cbd5df;
+  border-radius: 10px;
+
+  background: #fff;
+
+  color: #1f2933;
+
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0 16px;
+#urls:focus {
+  border-color: #64748b;
+
+  box-shadow:
+    0 0 0 3px rgba(100, 116, 139, 0.15);
 }
+
+
+/* =========================================================
+   INFO BELOW TEXTAREA
+========================================================= */
+
+.url-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  gap: 16px;
+
+  margin-top: 10px;
+}
+
+.hint {
+  margin: 0;
+
+  color: #6b7280;
+
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.url-count {
+  white-space: nowrap;
+
+  padding: 4px 9px;
+
+  border-radius: 999px;
+
+  background: #edf1f5;
+
+  color: #4b5563;
+
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.url-count.limit-exceeded {
+  background: #fee2e2;
+
+  color: #b91c1c;
+}
+
+.limit-warning {
+  min-height: 20px;
+
+  margin: 8px 0 0;
+
+  color: #b45309;
+
+  font-size: 0.85rem;
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
 
 .actions {
   display: flex;
   gap: 10px;
+
   margin-top: 20px;
 }
 
 button {
-  border: 0;
-  border-radius: 7px;
-  padding: 11px 16px;
-  font-weight: 700;
-  cursor: pointer;
-  background: #238636;
+  padding: 11px 18px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #334155;
+
   color: white;
+
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s,
+    opacity 0.15s,
+    background 0.15s;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  background: #1e293b;
+}
+
+button:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
 }
 
 button.secondary {
-  background: #6c757d;
+  background: #e8edf2;
+
+  color: #334155;
 }
 
-button.copy {
-  margin-top: 10px;
-  background: #1769aa;
+button.secondary:hover {
+  background: #dce3e9;
 }
+
+
+/* =========================================================
+   STATUS
+========================================================= */
 
 .status {
-  min-height: 20px;
-  margin-bottom: 0;
+  min-height: 24px;
+
+  margin: 18px 0 0;
+
+  color: #334155;
+
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.api-note {
+  margin: 18px 0 0;
+
+  padding-top: 16px;
+
+  border-top: 1px solid #edf0f2;
+
+  color: #7b8794;
+
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   RESULTS
+========================================================= */
+
+#results {
+  margin-top: 28px;
+}
+
+.result-card {
+  margin-bottom: 24px;
+
+  padding: 24px;
+
+  border: 1px solid #dde3e8;
+  border-radius: 14px;
+
+  background: white;
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.04);
 }
 
 .result-card h2 {
-  font-size: 1rem;
-  margin-top: 0;
-  background: #e9ecef;
-  padding: 10px;
-  border-left: 5px solid #28a745;
+  margin: 0 0 20px;
+
+  font-size: 1.1rem;
+
+  color: #334155;
 }
 
 .result {
-  margin: 16px 0;
-  border: 1px solid #e0e4e8;
-  border-radius: 8px;
-  padding: 14px;
+  padding: 20px 0;
+
+  border-top: 1px solid #edf0f2;
 }
 
-.result textarea {
-  min-height: 190px;
-  font-family: Consolas, Monaco, monospace;
-  font-size: .9rem;
+.result:first-of-type {
+  border-top: none;
+  padding-top: 0;
 }
 
-.error {
-  color: #a61b1b;
-  background: #fff0f0;
-  padding: 10px;
-  border-radius: 6px;
+.result > strong {
+  display: block;
+
+  margin-bottom: 14px;
+
+  font-size: 1rem;
+  line-height: 1.45;
 }
 
-@media (max-width: 650px) {
-  .grid { grid-template-columns: 1fr; }
-  .actions { flex-direction: column; }
-}
 
-.hint {
-  margin: 8px 0 0;
-  font-size: 0.9rem;
-  opacity: 0.75;
-}
+/* =========================================================
+   DETECTED INFO
+========================================================= */
 
 .detected-info {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 8px;
-  margin: 12px 0;
-  padding: 12px;
-  border-radius: 8px;
-  background: #f6f7f9;
-  font-size: 0.9rem;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(220px, 1fr));
+
+  gap: 8px 16px;
+
+  margin-bottom: 16px;
 }
 
 .detected-info span {
+  padding: 8px 10px;
+
+  border-radius: 7px;
+
+  background: #f6f8fa;
+
+  color: #4b5563;
+
+  font-size: 0.88rem;
+
   overflow-wrap: anywhere;
+}
+
+.detected-info strong {
+  color: #1f2933;
+}
+
+
+/* =========================================================
+   TEMPLATE TEXTAREA
+========================================================= */
+
+.result textarea {
+  width: 100%;
+  min-height: 160px;
+
+  padding: 14px;
+
+  resize: vertical;
+
+  border: 1px solid #d7dde3;
+  border-radius: 8px;
+
+  background: #f8fafc;
+
+  color: #334155;
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   COPY BUTTON
+========================================================= */
+
+.copy {
+  margin-top: 10px;
+
+  background: #475569;
+}
+
+.copy:hover:not(:disabled) {
+  background: #334155;
+}
+
+
+/* =========================================================
+   ERRORS
+========================================================= */
+
+.error {
+  margin-top: 14px;
+  padding: 14px 16px;
+
+  border-radius: 9px;
+
+  background: #fff1f1;
+  border: 1px solid #fecaca;
+
+  color: #991b1b;
+
+  font-size: 0.9rem;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+  .container {
+    width: min(100% - 24px, 1000px);
+
+    padding-top: 28px;
+  }
+
+  .header-top {
+    flex-direction: column;
+  }
+
+  .language-selector {
+    width: 100%;
+  }
+
+  .language-selector select {
+    flex: 1;
+  }
+
+  .card,
+  .result-card {
+    padding: 18px;
+  }
+
+  .url-info {
+    flex-direction: column;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+
+  .detected-info {
+    grid-template-columns: 1fr;
+  }
+
 }
