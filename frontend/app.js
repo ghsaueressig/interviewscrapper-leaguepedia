@@ -20,7 +20,7 @@ let isProcessing = false;
 
 const translations = {
   "pt-BR": {
-    subtitle: "Cole os links das matérias/vídeos e gere automaticamente o template ExternalContent/Line.",
+    subtitle: "Cole os links das matérias/vídeos e gere automaticamente o template ExternalContent/Line. Exclusivamente para o CBLOL.",
     languageLabel: "Idioma",
     linksLabel: "Links das matérias/vídeos",
 
@@ -79,7 +79,7 @@ https://youtube.com/...`,
 
 
   en: {
-    subtitle: "Paste article/video links and automatically generate the ExternalContent/Line template.",
+    subtitle: "Paste article/video links and automatically generate the ExternalContent/Line template. Exclusively for CBLOL..",
     languageLabel: "Language",
     linksLabel: "Article/video links",
 
@@ -138,7 +138,7 @@ https://youtube.com/...`,
 
 
   es: {
-    subtitle: "Pega los enlaces de artículos/videos y genera automáticamente la plantilla ExternalContent/Line.",
+    subtitle: "Pega los enlaces de artículos/videos y genera automáticamente la plantilla ExternalContent/Line. Exclusivamente para CBLOL.",
     languageLabel: "Idioma",
     linksLabel: "Enlaces de artículos/videos",
 
@@ -197,7 +197,7 @@ https://youtube.com/...`,
 
 
   fr: {
-    subtitle: "Collez les liens des articles/vidéos et générez automatiquement le modèle ExternalContent/Line.",
+    subtitle: "Collez les liens des articles/vidéos et générez automatiquement le modèle ExternalContent/Line. Exclusivement pour le CBLOL.",
     languageLabel: "Langue",
     linksLabel: "Liens des articles/vidéos",
 
