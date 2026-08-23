@@ -6,39 +6,90 @@
   <title>Leaguepedia Interview Scraper</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <main class="container">
+
     <header>
-      <h1>Leaguepedia Interview Scraper</h1>
-      <p>Cole os links das matérias/vídeos e gere automaticamente o template <code>ExternalContent/Line</code>.</p>
+      <div class="header-top">
+        <div>
+          <h1>Leaguepedia Interview Scraper</h1>
+
+          <p data-i18n="subtitle">
+            Cole os links das matérias/vídeos e gere automaticamente o template
+            <code>ExternalContent/Line</code>.
+          </p>
+        </div>
+
+        <div class="language-selector">
+          <label for="language" data-i18n="languageLabel">
+            Idioma
+          </label>
+
+          <select id="language" aria-label="Language">
+            <option value="pt-BR">🇧🇷 Português</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="fr">🇫🇷 Français</option>
+          </select>
+        </div>
+      </div>
     </header>
 
     <section class="card">
-      <label for="urls">Links das matérias</label>
-    <textarea
-      id="urls"
-      placeholder="Cole um link por linha.
-    
+
+      <label for="urls" data-i18n="linksLabel">
+        Links das matérias
+      </label>
+
+      <textarea
+        id="urls"
+        data-i18n-placeholder="urlsPlaceholder"
+        placeholder="Cole um link por linha.
+
 Ex.:
 https://maisesports.com.br/...
 https://sheepesports.com/...
 https://youtube.com/..."
-      autofocus
-    ></textarea>
+        autofocus
+      ></textarea>
 
-      <p class="hint">
-        Publicação, torneio, tipo de conteúdo, tradutor e vídeo são detectados automaticamente.
-      </p>
+      <div class="url-info">
+        <p class="hint" data-i18n="hint">
+          Publicação, torneio, tipo de conteúdo, tradutor e vídeo são detectados automaticamente.
+        </p>
+
+        <span id="url-count" class="url-count">
+          0 / 10
+        </span>
+      </div>
+
+      <p class="limit-warning" id="limit-warning"></p>
 
       <div class="actions">
-        <button id="scrape">Gerar Templates</button>
-        <button id="clear" class="secondary">Limpar</button>
+        <button id="scrape" data-i18n="generateButton">
+          Gerar Templates
+        </button>
+
+        <button
+          id="clear"
+          class="secondary"
+          data-i18n="clearButton"
+        >
+          Limpar
+        </button>
       </div>
 
       <p id="status" class="status"></p>
+
+      <p class="api-note" data-i18n="apiNote">
+        Para evitar uso excessivo da ferramenta, é possível processar até 10 links por vez.
+      </p>
+
     </section>
 
     <section id="results"></section>
+
   </main>
 
   <script src="app.js"></script>
