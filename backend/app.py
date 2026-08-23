@@ -25,6 +25,7 @@ from data.publications import (
     PUBLICATIONS,
     WRITTEN_PUBLICATIONS,
     VIDEO_DOMAINS,
+    VIDEO_EMBED_DOMAINS,
 )
 
 from data.tournaments import (
@@ -34,15 +35,7 @@ from data.tournaments import (
 
 from data.authors import AUTHOR_MAPPINGS
 
-from data.content_patterns import (
-    TRANSLATOR_PATTERNS,
-    INTERVIEW_TITLE_MARKERS,
-)
-
-from data.config import (
-    DEFAULT_CONFIG,
-    MAX_URLS_PER_REQUEST,
-)
+from data.config import MAX_URLS_PER_REQUEST
 
 app = Flask(__name__)
 CORS(app)
@@ -278,50 +271,34 @@ def detect_players_from_text(text):
 
 def detect_youtube_content_type(title, description):
     """
-    Classifica vídeos do YouTube especificamente para uso na Leaguepedia.
+    Classifica vídeos do YouTube para uso na Leaguepedia.
 
     Interview:
-    - Entrevistas e conversas com jogadores/pessoas do cenário.
+    Entrevistas e conversas com jogadores/pessoas do cenário.
 
     Article:
-    - Especiais, documentários, reportagens e outros conteúdos editoriais.
+    Especiais, documentários, reportagens e outros
+    conteúdos editoriais.
 
-    Unknown:
-    - Conteúdo que não conseguimos classificar com segurança.
+    Retorna string vazia quando não houver classificação segura.
     """
-    text = normalize_text(f"{title} {description}")
-    interview_patterns = [
-        "em entrevista ao",
-        "em entrevista para",
-        "entrevista com",
-        "entrevista ao",
-        "entrevistamos",
-        "conversamos com",
-        "conversa com",
-        "bate papo com",
-        "bate-papo com",
-        "papo com",
-    ]
-    if any(pattern in text for pattern in interview_patterns):
-        return "Interview"
-    article_patterns = [
-        "especial",
-        "documentario",
-        "reportagem",
-        "a historia de",
-        "historia de",
-        "a trajetoria de",
-        "trajetoria de",
-        "retrospectiva",
-        "bastidores",
-        "por dentro",
-        "como foi",
-        "conheca",
-        "conheça",
-    ]
 
-    if any(pattern in text for pattern in article_patterns):
+    text = normalize_text(
+        f"{title} {description}"
+    )
+
+    if any(
+        pattern in text
+        for pattern in YOUTUBE_INTERVIEW_PATTERNS
+    ):
+        return "Interview"
+
+    if any(
+        pattern in text
+        for pattern in YOUTUBE_ARTICLE_PATTERNS
+    ):
         return "Article"
+
     return ""
 
 def scrape_youtube(url):
@@ -463,90 +440,256 @@ def scrape_youtube(url):
             'url': url,
             'error': f'Erro ao processar vídeo do YouTube: {exc}'
         }
+
+def detect_author(content_text):
+    for author in AUTHOR_MAPPINGS:
+        if any(
+            name.lower() in content_text.lower()
+            for name in author["matches"]
+        ):
+            return author["wiki"]
+
+    return ""
         
 def scrape_article(url):
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (compatible; LeaguepediaInterviewScraper/1.0)'
+            'User-Agent': (
+                'Mozilla/5.0 '
+                '(compatible; LeaguepediaInterviewScraper/1.0)'
+            )
         }
-        response = requests.get(url, headers=headers, timeout=15)
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=15
+        )
+
         response.raise_for_status()
 
-        soup = BeautifulSoup(response.text, 'html.parser')
-        content_text = soup.get_text(" ", strip=True)
+        soup = BeautifulSoup(
+            response.text,
+            'html.parser'
+        )
+
+        content_text = soup.get_text(
+            " ",
+            strip=True
+        )
+
+        # ==============================
+        # TÍTULO
+        # ==============================
 
         title_tag = soup.find('h1')
-        title = title_tag.get_text(" ", strip=True) if title_tag else ""
-        title_clean = title.replace('|', '{{!}}')
 
-        author_formatted = ""
-    def detect_author(content_text):
-        for author in AUTHOR_MAPPINGS:
-            if any(name in content_text for name in author["matches"]):
-                return author["wiki"]
+        title = (
+            title_tag.get_text(" ", strip=True)
+            if title_tag
+            else ""
+        )
 
-        return ""
+        title_clean = title.replace(
+            '|',
+            '{{!}}'
+        )
+
+        # ==============================
+        # AUTOR
+        # ==============================
+
+        author_formatted = detect_author(
+            content_text
+        )
+
+        # ==============================
+        # DATA
+        # ==============================
 
         date_published = None
 
-        script_tag = soup.find('script', type='application/ld+json')
+        script_tag = soup.find(
+            'script',
+            type='application/ld+json'
+        )
+
         if script_tag and script_tag.string:
             try:
-                data_json = json.loads(script_tag.string)
-                graph = data_json.get('@graph', [data_json]) if isinstance(data_json, dict) else []
+                data_json = json.loads(
+                    script_tag.string
+                )
+
+                graph = (
+                    data_json.get(
+                        '@graph',
+                        [data_json]
+                    )
+                    if isinstance(
+                        data_json,
+                        dict
+                    )
+                    else []
+                )
+
                 for item in graph:
-                    if isinstance(item, dict) and 'datePublished' in item:
-                        date_published = parse_date(item['datePublished'])
+                    if (
+                        isinstance(item, dict)
+                        and 'datePublished' in item
+                    ):
+                        date_published = parse_date(
+                            item['datePublished']
+                        )
+
                         if date_published:
                             break
-            except (json.JSONDecodeError, TypeError, ValueError):
+
+            except (
+                json.JSONDecodeError,
+                TypeError,
+                ValueError
+            ):
                 pass
 
+        # Fallback para <time>
         if not date_published:
-            time_tag = soup.find('time', class_='entry-date') or soup.find('time')
-            if time_tag and time_tag.get('datetime'):
-                date_published = parse_date(time_tag['datetime'])
 
+            time_tag = (
+                soup.find(
+                    'time',
+                    class_='entry-date'
+                )
+                or soup.find('time')
+            )
+
+            if (
+                time_tag
+                and time_tag.get('datetime')
+            ):
+                date_published = parse_date(
+                    time_tag['datetime']
+                )
+
+        # Último fallback
         if not date_published:
             date_published = datetime.now()
 
+        # ==============================
+        # PLAYERS / TEAMS
+        # ==============================
+
         found_players = []
         found_teams = set()
-        slug_parts = url.rstrip('/').split('/')[-1].split('-')
-        slug_lower = [part.lower() for part in slug_parts]
 
-        players_in_slug = [part for part in slug_lower if part in PLAYER_DATA]
+        slug_parts = (
+            url
+            .rstrip('/')
+            .split('/')[-1]
+            .split('-')
+        )
 
+        slug_lower = [
+            part.lower()
+            for part in slug_parts
+        ]
+
+        players_in_slug = [
+            part
+            for part in slug_lower
+            if part in PLAYER_DATA
+        ]
+
+        # Jogadores identificados no slug
         if players_in_slug:
-            for p_key in players_in_slug:
-                found_players.append(PLAYER_DATA[p_key]['wiki'])
-                found_teams.add(PLAYER_DATA[p_key]['team'])
-        else:
-            if 'diz' in slug_lower:
-                idx = slug_lower.index('diz')
-                for p in slug_parts[idx + 1:]:
-                    if p.capitalize() not in STOPWORDS and len(p) > 2:
-                        match = re.search(re.escape(p), title, re.IGNORECASE)
-                        if match and match.group(0).capitalize() not in STOPWORDS:
-                            found_players.append(match.group(0))
 
+            for p_key in players_in_slug:
+
+                found_players.append(
+                    PLAYER_DATA[p_key]['wiki']
+                )
+
+                found_teams.add(
+                    PLAYER_DATA[p_key]['team']
+                )
+
+        else:
+
+            # Fallback para títulos como:
+            # "jogador diz ..."
+            if 'diz' in slug_lower:
+
+                idx = slug_lower.index('diz')
+
+                for p in slug_parts[idx + 1:]:
+
+                    if (
+                        p.capitalize() not in STOPWORDS
+                        and len(p) > 2
+                    ):
+
+                        match = re.search(
+                            re.escape(p),
+                            title,
+                            re.IGNORECASE
+                        )
+
+                        if (
+                            match
+                            and match.group(0).capitalize()
+                            not in STOPWORDS
+                        ):
+                            found_players.append(
+                                match.group(0)
+                            )
+
+            # Detecta equipes pelo slug
             for part in slug_lower:
+
                 if part in TEAM_MAP:
-                    found_teams.add(TEAM_MAP[part])
+                    found_teams.add(
+                        TEAM_MAP[part]
+                    )
+
+        # ==============================
+        # DETECÇÕES
+        # ==============================
 
         publication = detect_publication(url)
-        tournament = detect_tournament(date_published, title, content_text, url)
-        content_type = detect_type(title, content_text)
-        translator = detect_translator(content_text)
-        isvideo = detect_video(url, soup)
+        tournament = detect_tournament(
+            date_published,
+            title,
+            content_text,
+            url
+        )
+        content_type = detect_type(
+            title,
+            content_text
+        )
+        translator = detect_translator(
+            content_text
+        )
+        isvideo = detect_video(
+            url,
+            soup
+        )
+
+        # ==============================
+        # RESULTADO
+        # ==============================
 
         return {
             'url': url,
             'title': title_clean,
-            'players': ", ".join(sorted(set(found_players))),
-            'teams': ", ".join(sorted(found_teams)),
+            'players': ", ".join(
+                sorted(set(found_players))
+            ),
+            'teams': ", ".join(
+                sorted(found_teams)
+            ),
             'author': author_formatted,
-            'date': date_published.strftime('%Y-%m-%d'),
+            'date': date_published.strftime(
+                '%Y-%m-%d'
+            ),
             'tournament': tournament,
             'publication': publication,
             'type': content_type,
@@ -555,9 +698,19 @@ def scrape_article(url):
         }
 
     except requests.RequestException as exc:
-        return {'url': url, 'error': f'Erro ao acessar a página: {exc}'}
+        return {
+            'url': url,
+            'error': (
+                f'Erro ao acessar a página: {exc}'
+            )
+        }
     except Exception as exc:
-        return {'url': url, 'error': f'Erro ao processar a página: {exc}'}
+        return {
+            'url': url,
+            'error': (
+                f'Erro ao processar a página: {exc}'
+            )
+        }
 
 def make_template(res):
     return (
