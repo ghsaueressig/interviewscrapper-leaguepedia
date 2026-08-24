@@ -1,6 +1,13 @@
-import requests
+import json
+import os
 import unicodedata
 
+import requests
+
+
+# ==================================================
+# CONFIGURAÇÃO
+# ==================================================
 
 LEAGUEPEDIA_API_URL = (
     "https://lol.fandom.com/api.php"
@@ -8,26 +15,194 @@ LEAGUEPEDIA_API_URL = (
 
 REQUEST_TIMEOUT = 10
 
-def normalize_text(value):
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
+
+PLAYER_CACHE_PATH = os.path.join(
+    BASE_DIR,
+    "data",
+    "player_cache.json"
+)
+
+REQUEST_HEADERS = {
+    "User-Agent": (
+        "LeaguepediaInterviewScraper/1.0 "
+        "(GitHub personal project)"
+    )
+}
+
+
+# ==================================================
+# NORMALIZAÇÃO
+# ==================================================
+
+def normalize_player_key(value):
     """
-    Normaliza texto para comparações.
+    Normaliza nomes para uso como chave.
 
     Exemplos:
         titaN -> titan
-        TitaN -> titan
         Céos -> ceos
+        Robo -> robo
     """
+
     value = unicodedata.normalize(
         "NFKD",
         value or ""
     )
 
-    return "".join(
+    value = "".join(
         char
         for char in value
         if not unicodedata.combining(char)
-    ).lower().strip()
+    )
 
+    return value.lower().strip()
+
+
+def normalize_text(value):
+    """
+    Alias para normalização de texto.
+    """
+
+    return normalize_player_key(value)
+
+
+# ==================================================
+# PLAYER CACHE
+# ==================================================
+
+def load_player_cache():
+    """
+    Carrega o cache local de jogadores.
+    """
+
+    if not os.path.exists(
+        PLAYER_CACHE_PATH
+    ):
+        return {}
+
+    try:
+        with open(
+            PLAYER_CACHE_PATH,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            data = json.load(file)
+
+            if isinstance(data, dict):
+                return data
+
+    except (
+        json.JSONDecodeError,
+        OSError
+    ):
+        pass
+
+    return {}
+
+
+def save_player_cache(cache):
+    """
+    Salva o cache local.
+    """
+
+    try:
+        os.makedirs(
+            os.path.dirname(
+                PLAYER_CACHE_PATH
+            ),
+            exist_ok=True
+        )
+
+        with open(
+            PLAYER_CACHE_PATH,
+            "w",
+            encoding="utf-8"
+        ) as file:
+
+            json.dump(
+                cache,
+                file,
+                ensure_ascii=False,
+                indent=2
+            )
+
+    except OSError as exc:
+        print(
+            f"Erro ao salvar player cache: {exc}"
+        )
+
+
+def get_cached_player(player_name):
+    """
+    Procura um jogador no cache.
+    """
+
+    if not player_name:
+        return None
+
+    cache = load_player_cache()
+
+    player_key = normalize_player_key(
+        player_name
+    )
+
+    return cache.get(player_key)
+
+
+def cache_player(player_name, player_data):
+    """
+    Adiciona ou atualiza um jogador no cache.
+
+    player_data esperado:
+
+    {
+        "id": "...",
+        "wiki": "...",
+        "team": "...",
+        "role": "..."
+    }
+    """
+
+    if not player_name or not player_data:
+        return None
+
+    player_key = normalize_player_key(
+        player_name
+    )
+
+    cache = load_player_cache()
+
+    cache[player_key] = {
+        "id": player_data.get(
+            "id",
+            ""
+        ),
+        "wiki": player_data.get(
+            "wiki",
+            ""
+        ),
+        "team": player_data.get(
+            "team",
+            ""
+        ),
+        "role": player_data.get(
+            "role",
+            ""
+        ),
+    }
+
+    save_player_cache(cache)
+
+    return cache[player_key]
+
+
+# ==================================================
+# LEAGUEPEDIA CARGO API
+# ==================================================
 
 def cargo_query(
     tables,
@@ -37,9 +212,8 @@ def cargo_query(
     limit=20
 ):
     """
-    Executa uma consulta Cargo na API da Leaguepedia.
-
-    Retorna uma lista de dicionários.
+    Executa uma consulta Cargo
+    na API da Leaguepedia.
     """
 
     params = {
@@ -60,19 +234,17 @@ def cargo_query(
         LEAGUEPEDIA_API_URL,
         params=params,
         timeout=REQUEST_TIMEOUT,
-        headers={
-            "User-Agent": (
-                "LeaguepediaInterviewScraper/1.0 "
-                "(GitHub personal project)"
-            )
-        }
+        headers=REQUEST_HEADERS
     )
 
     response.raise_for_status()
 
     data = response.json()
 
-    results = data.get("cargoquery", [])
+    results = data.get(
+        "cargoquery",
+        []
+    )
 
     return [
         item.get("title", {})
@@ -80,19 +252,13 @@ def cargo_query(
     ]
 
 
+# ==================================================
+# BUSCA GERAL DE JOGADOR
+# ==================================================
+
 def search_player(player_name):
     """
-    Procura um jogador pelo IGN.
-
-    Retorna:
-        {
-            "id": "...",
-            "wiki": "...",
-            "team": "...",
-            "role": "..."
-        }
-
-    ou None caso não encontre.
+    Procura um jogador na tabela Players.
     """
 
     if not player_name:
@@ -100,13 +266,13 @@ def search_player(player_name):
 
     player_name = player_name.strip()
 
-    # Escapar aspas simples para a consulta Cargo.
     escaped_name = player_name.replace(
         "'",
         "\\'"
     )
 
     try:
+
         results = cargo_query(
             tables="Players",
             fields=(
@@ -126,8 +292,6 @@ def search_player(player_name):
     if not results:
         return None
 
-    # Primeiro tentamos encontrar uma correspondência
-    # exata após normalização.
     normalized_search = normalize_text(
         player_name
     )
@@ -137,40 +301,52 @@ def search_player(player_name):
     for result in results:
 
         player_id = normalize_text(
-            result.get("ID", "")
+            result.get(
+                "ID",
+                ""
+            )
         )
 
         if player_id == normalized_search:
             selected = result
             break
 
-    # Se não houver match exato,
-    # usamos o primeiro resultado.
     if not selected:
         selected = results[0]
 
     return {
-        "id": selected.get("ID", ""),
-        "wiki": (
-            selected.get("Player")
-            or selected.get("OverviewPage")
-            or selected.get("ID", "")
-        ),
-        "team": selected.get("Team", ""),
-        "teams": selected.get(
-            "CurrentTeams",
+        "id": selected.get(
+            "ID",
             ""
         ),
+        "wiki": (
+            selected.get(
+                "Player"
+            )
+            or selected.get(
+                "OverviewPage"
+            )
+            or selected.get(
+                "ID",
+                ""
+            )
+        ),
+        "team": selected.get(
+            "Team",
+            ""
+        ),
+        "role": "",
     }
 
 
+# ==================================================
+# BUSCA ATUAL DE JOGADOR
+# ==================================================
+
 def get_current_player(player_name):
     """
-    Busca informações atuais do jogador.
-
-    Usa a tabela ListplayerCurrent,
-    que possui informações como:
-    ID, Link, Name, Role e Team.
+    Busca informações atuais do jogador
+    na tabela ListplayerCurrent.
     """
 
     if not player_name:
@@ -184,6 +360,7 @@ def get_current_player(player_name):
     )
 
     try:
+
         results = cargo_query(
             tables="ListplayerCurrent",
             fields=(
@@ -212,8 +389,12 @@ def get_current_player(player_name):
     for result in results:
 
         if normalize_text(
-            result.get("ID", "")
+            result.get(
+                "ID",
+                ""
+            )
         ) == normalized_search:
+
             selected = result
             break
 
@@ -221,48 +402,108 @@ def get_current_player(player_name):
         selected = results[0]
 
     return {
-        "id": selected.get("ID", ""),
-        "wiki": (
-            selected.get("Link")
-            or selected.get("ID", "")
+        "id": selected.get(
+            "ID",
+            ""
         ),
-        "name": selected.get("Name", ""),
-        "role": selected.get("Role", ""),
-        "team": selected.get("Team", ""),
+        "wiki": (
+            selected.get(
+                "Link"
+            )
+            or selected.get(
+                "Name"
+            )
+            or selected.get(
+                "ID",
+                ""
+            )
+        ),
+        "team": selected.get(
+            "Team",
+            ""
+        ),
+        "role": selected.get(
+            "Role",
+            ""
+        ),
     }
 
 
+# ==================================================
+# RESOLUÇÃO DE JOGADOR
+# ==================================================
+
 def resolve_player(player_name):
     """
-    Função principal recomendada para o scraper.
+    Resolve um jogador automaticamente.
 
-    Primeiro tenta obter os dados atuais
-    do jogador.
+    Ordem:
 
-    Caso não encontre, tenta a tabela
-    geral Players.
-
-    Retorna None caso o jogador não seja
-    encontrado.
+    1. Cache local
+    2. Lista atual da Leaguepedia
+    3. Tabela geral Players
+    4. Salva resultado no cache
     """
+
+    if not player_name:
+        return None
+
+    # ----------------------------------------------
+    # 1. CACHE
+    # ----------------------------------------------
+
+    cached_player = get_cached_player(
+        player_name
+    )
+
+    if cached_player:
+        return cached_player
+
+    # ----------------------------------------------
+    # 2. LEAGUEPEDIA ATUAL
+    # ----------------------------------------------
 
     player = get_current_player(
         player_name
     )
 
-    if player:
-        return player
+    # ----------------------------------------------
+    # 3. LEAGUEPEDIA GERAL
+    # ----------------------------------------------
 
-    return search_player(
-        player_name
+    if not player:
+        player = search_player(
+            player_name
+        )
+
+    # ----------------------------------------------
+    # 4. NÃO ENCONTROU
+    # ----------------------------------------------
+
+    if not player:
+        return None
+
+    # ----------------------------------------------
+    # 5. SALVA NO CACHE
+    # ----------------------------------------------
+
+    cache_player(
+        player_name,
+        player
     )
 
+    return player
+
+
+# ==================================================
+# JOGADORES DE UM TORNEIO
+# ==================================================
 
 def get_tournament_players(tournament_name):
     """
     Busca jogadores registrados em um torneio.
 
-    Retorna um dicionário no formato:
+    Retorna:
 
     {
         "titan": {
@@ -278,10 +519,14 @@ def get_tournament_players(tournament_name):
 
     escaped_tournament = (
         tournament_name
-        .replace("'", "\\'")
+        .replace(
+            "'",
+            "\\'"
+        )
     )
 
     try:
+
         results = cargo_query(
             tables="TournamentPlayers",
             fields=(
@@ -304,7 +549,10 @@ def get_tournament_players(tournament_name):
     for result in results:
 
         player_name = (
-            result.get("Player")
+            result.get(
+                "Player",
+                ""
+            )
             or ""
         ).strip()
 
@@ -315,7 +563,8 @@ def get_tournament_players(tournament_name):
             player_name
         )
 
-        players[player_key] = {
+        player_data = {
+            "id": player_name,
             "wiki": player_name,
             "team": result.get(
                 "Team",
@@ -326,5 +575,13 @@ def get_tournament_players(tournament_name):
                 ""
             ),
         }
+
+        players[player_key] = player_data
+
+        # Também aproveitamos para popular o cache.
+        cache_player(
+            player_name,
+            player_data
+        )
 
     return players
