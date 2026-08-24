@@ -8,10 +8,13 @@ from urllib.parse import urlparse
 import re
 import unicodedata
 from collections import defaultdict
-
 from data.players import PLAYER_DATA
 from data.teams import TEAM_MAP
-
+from leaguepedia import (
+    resolve_player,
+    get_cached_player,
+    cache_player,
+)
 from data.content import (
     STOPWORDS,
     INTERVIEW_TITLE_MARKERS,
@@ -20,21 +23,17 @@ from data.content import (
     YOUTUBE_INTERVIEW_PATTERNS,
     YOUTUBE_ARTICLE_PATTERNS,
 )
-
 from data.publications import (
     PUBLICATIONS,
     WRITTEN_PUBLICATIONS,
     VIDEO_DOMAINS,
 )
-
 from data.tournaments import (
     TOURNAMENT_CALENDAR,
     TOURNAMENT_PATTERNS,
     TOURNAMENT_NAMES,
 )
-
 from data.authors import AUTHOR_MAPPINGS
-
 from data.config import MAX_URLS_PER_REQUEST
 
 app = Flask(__name__)
@@ -261,11 +260,10 @@ def is_youtube_url(url):
         for domain in youtube_domains
     )
 
-
 def find_interviewee_in_text(text):
     """
-    Procura padrões explícitos de entrevista antes de procurar
-    simplesmente todos os jogadores mencionados.
+    Procura padrões explícitos que indiquem
+    quem é o entrevistado.
     """
 
     patterns = [
@@ -275,10 +273,13 @@ def find_interviewee_in_text(text):
         r'entrevista com\s*([^,.\n]+)',
     ]
 
-    text_normalized = normalize_text(text)
-
     for pattern in patterns:
-        match = re.search(pattern, text_normalized, re.IGNORECASE)
+
+        match = re.search(
+            pattern,
+            text,
+            re.IGNORECASE
+        )
 
         if not match:
             continue
@@ -286,37 +287,200 @@ def find_interviewee_in_text(text):
         possible_name = match.group(1).strip()
 
         possible_name = re.sub(
-            r'\b(fala|falou|comenta|comentou|conta|contou|revela|revelou|diz)\b.*$',
+            (
+                r'\b('
+                r'fala|falou|comenta|comentou|'
+                r'conta|contou|revela|revelou|diz'
+                r')\b.*$'
+            ),
             '',
-            possible_name
+            possible_name,
+            flags=re.IGNORECASE
         ).strip()
 
-        possible_name_normalized = normalize_text(possible_name)
+        if not possible_name:
+            continue
 
-        for player_key, player_data in PLAYER_DATA.items():
-            if (
-                player_key == possible_name_normalized
-                or player_key in possible_name_normalized.split()
-            ):
-                return player_key
+        # Primeiro PLAYER_DATA.
+        player_key = normalize_text(
+            possible_name
+        )
+
+        if player_key in PLAYER_DATA:
+
+            return {
+                "wiki": PLAYER_DATA[player_key].get(
+                    "wiki",
+                    ""
+                ),
+                "team": PLAYER_DATA[player_key].get(
+                    "team",
+                    ""
+                ),
+                "role": PLAYER_DATA[player_key].get(
+                    "role",
+                    ""
+                )
+            }
+
+        # Depois cache.
+        player = get_cached_player(
+            possible_name
+        )
+
+        if player:
+            return player
+
+        # Finalmente Leaguepedia.
+        player = resolve_player(
+            possible_name
+        )
+
+        if player:
+
+            cache_player(
+                possible_name,
+                player.get("wiki", ""),
+                player.get("team", ""),
+                player.get("role", "")
+            )
+
+            return player
 
     return None
 
-
 def detect_players_from_text(text):
     """
-    Fallback para encontrar jogadores conhecidos mencionados no texto.
+    Detecta jogadores conhecidos no texto.
+
+    Primeiro procura no PLAYER_DATA local.
+    Depois procura nomes candidatos no cache/Leaguepedia.
     """
+
     text_normalized = normalize_text(text)
+
     found = []
 
     for player_key in PLAYER_DATA:
-        pattern = rf'\b{re.escape(player_key)}\b'
 
-        if re.search(pattern, text_normalized, re.IGNORECASE):
+        pattern = (
+            rf'\b{re.escape(player_key)}\b'
+        )
+
+        if re.search(
+            pattern,
+            text_normalized,
+            re.IGNORECASE
+        ):
             found.append(player_key)
 
-    return found
+    return list(dict.fromkeys(found))
+
+def resolve_players_from_text(text):
+    """
+    Procura jogadores mencionados no texto.
+
+    Ordem:
+    1. PLAYER_DATA local
+    2. player_cache.json
+    3. Leaguepedia
+    """
+
+    text_normalized = normalize_text(text)
+
+    found_players = {}
+
+    # ==================================================
+    # 1. PROCURA JOGADORES CONHECIDOS LOCALMENTE
+    # ==================================================
+
+    for player_key, player_data in PLAYER_DATA.items():
+
+        pattern = (
+            rf'\b{re.escape(player_key)}\b'
+        )
+
+        if re.search(
+            pattern,
+            text_normalized,
+            re.IGNORECASE
+        ):
+            found_players[player_key] = {
+                "wiki": player_data.get("wiki", ""),
+                "team": player_data.get("team", ""),
+                "role": player_data.get("role", "")
+            }
+
+    # ==================================================
+    # 2. EXTRAÇÃO DE POSSÍVEIS NOMES
+    # ==================================================
+
+    words = re.findall(
+        r'\b[A-Za-zÀ-ÿ0-9][A-Za-zÀ-ÿ0-9_-]{2,}\b',
+        text
+    )
+
+    candidates = []
+
+    for word in words:
+
+        normalized = normalize_text(word)
+
+        if normalized in PLAYER_DATA:
+            continue
+
+        if normalized in STOPWORDS:
+            continue
+
+        candidates.append(word)
+
+    candidates = list(
+        dict.fromkeys(candidates)
+    )
+
+    # ==================================================
+    # 3. CACHE + LEAGUEPEDIA
+    # ==================================================
+
+    for candidate in candidates:
+
+        player_key = normalize_text(candidate)
+
+        # Evita repetir consultas.
+        if player_key in found_players:
+            continue
+
+        # Primeiro verifica cache.
+        player = get_cached_player(candidate)
+
+        # Se não estiver no cache,
+        # consulta a Leaguepedia.
+        if not player:
+
+            player = resolve_player(candidate)
+
+            if player:
+
+                cache_player(
+                    candidate,
+                    player.get("wiki", ""),
+                    player.get("team", ""),
+                    player.get("role", "")
+                )
+
+        if not player:
+            continue
+
+        wiki_name = player.get("wiki", "")
+
+        # Segurança:
+        # só aceita se existir um nome válido.
+        if not wiki_name:
+            continue
+
+        found_players[player_key] = player
+
+    return found_players
 
 def detect_youtube_content_type(title, description):
     """
@@ -370,12 +534,17 @@ def scrape_youtube(url):
             " ".join(tags)
         ])
 
-        date_published = parse_date(metadata.get('published_at'))
+        date_published = parse_date(
+            metadata.get('published_at')
+        )
 
         if not date_published:
             date_published = datetime.now()
 
-        # Detecta primeiro o tipo de conteúdo.
+        # ==================================================
+        # DETECTA O TIPO DE CONTEÚDO
+        # ==================================================
+
         content_type = detect_youtube_content_type(
             title,
             description
@@ -387,64 +556,89 @@ def scrape_youtube(url):
         # ==================================================
         # INTERVIEW
         # ==================================================
+
         if content_type == "Interview":
 
-            # Primeiro tentamos identificar explicitamente
-            # o entrevistado na descrição.
-            interviewee_key = find_interviewee_in_text(
+            # Primeiro tenta identificar explicitamente
+            # quem é o entrevistado.
+            interviewee = find_interviewee_in_text(
                 description
             )
 
-            # Fallback: procurar jogadores no título + descrição.
-            if not interviewee_key:
-                detected_players = detect_players_from_text(
-                    f"{title} {description}"
+            # Fallback:
+            # procura jogadores no título + descrição.
+            if not interviewee:
+
+                detected_players = (
+                    resolve_players_from_text(
+                        f"{title} {description}"
+                    )
                 )
 
-                # Só usamos automaticamente se houver
-                # exatamente um candidato.
+                # Para entrevistas, só usamos automaticamente
+                # se encontrarmos exatamente um jogador.
                 if len(detected_players) == 1:
-                    interviewee_key = detected_players[0]
 
-            # Para entrevistas, adicionamos somente
-            # o entrevistado principal.
-            if (
-                interviewee_key
-                and interviewee_key in PLAYER_DATA
-            ):
-                player = PLAYER_DATA[interviewee_key]
+                    interviewee = next(
+                        iter(detected_players.values())
+                    )
 
-                found_players.append(
-                    player["wiki"]
+            # Adiciona somente o entrevistado principal.
+            if interviewee:
+
+                wiki_name = interviewee.get(
+                    "wiki",
+                    ""
                 )
 
-                found_teams.add(
-                    player["team"]
+                team_name = interviewee.get(
+                    "team",
+                    ""
                 )
+
+                if wiki_name:
+                    found_players.append(
+                        wiki_name
+                    )
+
+                if team_name:
+                    found_teams.add(
+                        team_name
+                    )
 
         # ==================================================
         # ARTICLE / ESPECIAL
         # ==================================================
+
         elif content_type == "Article":
 
-            detected_players = detect_players_from_text(
-                f"{title} {description}"
+            detected_players = (
+                resolve_players_from_text(
+                    f"{title} {description}"
+                )
             )
 
-            for player_key in detected_players:
+            for player in detected_players.values():
 
-                if player_key not in PLAYER_DATA:
-                    continue
-
-                player = PLAYER_DATA[player_key]
-
-                found_players.append(
-                    player["wiki"]
+                wiki_name = player.get(
+                    "wiki",
+                    ""
                 )
 
-                found_teams.add(
-                    player["team"]
+                team_name = player.get(
+                    "team",
+                    ""
                 )
+
+                if wiki_name:
+                    found_players.append(
+                        wiki_name
+                    )
+
+                if team_name:
+                    found_teams.add(
+                        team_name
+                    )
 
         # ==================================================
         # OUTRAS DETECÇÕES
@@ -461,33 +655,70 @@ def scrape_youtube(url):
             description
         )
 
+        # Remove possíveis duplicatas mantendo a ordem.
+        found_players = list(
+            dict.fromkeys(found_players)
+        )
+
         return {
             'url': url,
-            'title': title.replace('|', '{{!}}'),
-            'players': ", ".join(found_players),
-            'teams': ", ".join(sorted(found_teams)),
-            'author': metadata.get('channel') or '',
-            'date': date_published.strftime('%Y-%m-%d'),
 
-            # Regra específica da Leaguepedia para vídeos.
+            'title': title.replace(
+                '|',
+                '{{!}}'
+            ),
+
+            'players': ", ".join(
+                found_players
+            ),
+
+            'teams': ", ".join(
+                sorted(found_teams)
+            ),
+
+            'author': (
+                metadata.get('channel')
+                or ''
+            ),
+
+            'date': date_published.strftime(
+                '%Y-%m-%d'
+            ),
+
+            # Regra específica da Leaguepedia
+            # para vídeos do YouTube.
             'publication': 'YouTube',
+
             'tournament': tournament,
+
             'type': content_type,
+
             'translator': translator,
+
             'isvideo': 'Yes',
 
             # Informações extras úteis para debug/futuro.
-            'video_id': metadata.get('video_id'),
-            'duration': metadata.get('duration'),
+            'video_id': metadata.get(
+                'video_id'
+            ),
+
+            'duration': metadata.get(
+                'duration'
+            ),
+
             'captions_available': metadata.get(
                 'captions_available'
             )
         }
 
     except Exception as exc:
+
         return {
             'url': url,
-            'error': f'Erro ao processar vídeo do YouTube: {exc}'
+            'error': (
+                f'Erro ao processar vídeo '
+                f'do YouTube: {exc}'
+            )
         }
 
 def detect_author(content_text):
