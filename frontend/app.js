@@ -28,13 +28,13 @@ function updateThemeButton() {
   );
 
   if (isDark) {
-    themeToggle.textContent = "☀️ Modo claro";
+    themeToggle.textContent = "☀️ ";
     themeToggle.setAttribute(
       "aria-label",
       "Alternar para modo claro"
     );
   } else {
-    themeToggle.textContent = "🌙 Modo escuro";
+    themeToggle.textContent = "🌙 ";
     themeToggle.setAttribute(
       "aria-label",
       "Alternar para modo escuro"
