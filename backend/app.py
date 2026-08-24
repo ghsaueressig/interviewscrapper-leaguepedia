@@ -30,6 +30,7 @@ from data.publications import (
 from data.tournaments import (
     TOURNAMENT_CALENDAR,
     TOURNAMENT_PATTERNS,
+    TOURNAMENT_NAMES,
 )
 
 from data.authors import AUTHOR_MAPPINGS
@@ -58,29 +59,78 @@ def detect_publication(url):
     return PUBLICATIONS.get(hostname, '')
 
 def detect_tournament(date_published, title, content_text, url):
-    """Detecta o torneio por sinais explícitos e, depois, pela data."""
-    text = normalize_text(f"{title} {content_text} {url}")
-    year_match = re.search(r'\b(20\d{2})\b', text)
-    year = int(year_match.group(1)) if year_match else (date_published.year if date_published else None)
+    """
+    Detecta torneios priorizando:
 
-    if year:
-        explicit = [
-            (rf'cblol\s*(?:cup|copa)\s*{year}', f'CBLOL Cup {year}'),
-            (rf'cblol\s*{year}\s*split\s*1', f'CBLOL {year} Split 1'),
-            (rf'cblol\s*{year}\s*split\s*2', f'CBLOL {year} Split 2'),
-            (rf'cblol\s*(?:1|1a|1ª|primeira)\s*(?:etapa|etapa)', f'CBLOL {year} Split 1'),
-            (rf'cblol\s*(?:2|2a|2ª|segunda)\s*(?:etapa|etapa)', f'CBLOL {year} Split 2'),
-        ]
-        for pattern, name in explicit:
-            if re.search(pattern, text):
-                return name
+    1. Menções explícitas no título/texto/URL.
+    2. Data de publicação dentro do calendário.
+    3. Margem de 7 dias após o torneio como fallback.
+    """
 
-    tournaments = TOURNAMENT_CALENDAR.get(year, []) if year else []
+    text = normalize_text(
+        f"{title} {content_text} {url}"
+    )
+
+    # --------------------------------------------------
+    # DESCOBRIR O ANO
+    # --------------------------------------------------
+
+    year_match = re.search(
+        r'\b(20\d{2})\b',
+        text
+    )
+
+    if year_match:
+        year = int(year_match.group(1))
+    elif date_published:
+        year = date_published.year
+    else:
+        return ''
+
+    for tournament_group, tournament_types in TOURNAMENT_PATTERNS.items():
+        for tournament_type, patterns in tournament_types.items():
+            for pattern in patterns:
+                formatted_pattern = pattern.format(
+                    year=year
+                )
+                if re.search(
+                    formatted_pattern,
+                    text,
+                    re.IGNORECASE
+                ):
+                    name_template = (
+                        TOURNAMENT_NAMES
+                        .get(tournament_group, {})
+                        .get(tournament_type)
+                    )
+                    if name_template:
+                        return name_template.format(
+                            year=year
+                        )
+
+    tournaments = TOURNAMENT_CALENDAR.get(
+        year,
+        []
+    )
+
     if date_published:
         for tournament in tournaments:
-            start = datetime.fromisoformat(tournament['start'])
-            end = datetime.fromisoformat(tournament['end']) + timedelta(days=7)
+            start = datetime.fromisoformat(
+                tournament['start']
+            )
+            end = datetime.fromisoformat(
+                tournament['end']
+            )
             if start <= date_published <= end:
+                return tournament['name']
+
+    if date_published:
+        for tournament in reversed(tournaments):
+            end = datetime.fromisoformat(
+                tournament['end']
+            )
+            grace_end = end + timedelta(days=7)
+            if end < date_published <= grace_end:
                 return tournament['name']
 
     return ''
