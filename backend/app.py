@@ -598,57 +598,39 @@ def scrape_article(url):
             if part in PLAYER_DATA
         ]
 
-        # Jogadores identificados no slug
-        if players_in_slug:
-
-            for p_key in players_in_slug:
-
-                found_players.append(
-                    PLAYER_DATA[p_key]['wiki']
-                )
-
+        # ==========================================
+        # DETECÇÃO DE JOGADORES CONHECIDOS
+        # ==========================================
+        
+        detected_player_keys = detect_players_from_text(
+            f"{title} {content_text}"
+        )
+        
+        for player_key in detected_player_keys:
+        
+            player = PLAYER_DATA[player_key]
+        
+            found_players.append(
+                player["wiki"]
+            )
+        
+            found_teams.add(
+                player["team"]
+            )
+        
+        
+        # ==========================================
+        # DETECÇÃO DE EQUIPES
+        # ==========================================
+        
+        for part in slug_lower:
+        
+            if part in TEAM_MAP:
+        
                 found_teams.add(
-                    PLAYER_DATA[p_key]['team']
+                    TEAM_MAP[part]
                 )
-
-        else:
-
-            # Fallback para títulos como:
-            # "jogador diz ..."
-            if 'diz' in slug_lower:
-
-                idx = slug_lower.index('diz')
-
-                for p in slug_parts[idx + 1:]:
-
-                    if (
-                        p.capitalize() not in STOPWORDS
-                        and len(p) > 2
-                    ):
-
-                        match = re.search(
-                            re.escape(p),
-                            title,
-                            re.IGNORECASE
-                        )
-
-                        if (
-                            match
-                            and match.group(0).capitalize()
-                            not in STOPWORDS
-                        ):
-                            found_players.append(
-                                match.group(0)
-                            )
-
-            # Detecta equipes pelo slug
-            for part in slug_lower:
-
-                if part in TEAM_MAP:
-                    found_teams.add(
-                        TEAM_MAP[part]
-                    )
-
+        
         # ==============================
         # DETECÇÕES
         # ==============================
