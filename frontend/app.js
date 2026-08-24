@@ -576,21 +576,48 @@ function createDetectedInfo(item) {
 
   for (const [labelKey, value] of values) {
 
-    const span = document.createElement("span");
+  const span = document.createElement("span");
 
-    const strong = document.createElement("strong");
+  const strong = document.createElement("strong");
 
-    strong.textContent = `${t(labelKey)}: `;
+  strong.textContent = `${t(labelKey)}: `;
 
-    span.appendChild(strong);
+  span.appendChild(strong);
+
+  if (
+    labelKey === "date"
+    && item.date
+  ) {
+
+    const dateLink = document.createElement("a");
+
+    dateLink.className = "date-link";
+
+    dateLink.href =
+      `https://lol.fandom.com/wiki/Data:ExternalContent/${item.date}`;
+
+    dateLink.target = "_blank";
+
+    dateLink.rel = "noopener noreferrer";
+
+    dateLink.title =
+      "Abrir página correspondente na Leaguepedia";
+
+    dateLink.textContent = item.date;
+
+    span.appendChild(dateLink);
+
+  } else {
 
     span.appendChild(
       document.createTextNode(value)
     );
 
-    info.appendChild(span);
-
   }
+
+  info.appendChild(span);
+
+}
 
   return info;
 }
