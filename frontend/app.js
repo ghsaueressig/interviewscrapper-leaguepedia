@@ -574,63 +574,23 @@ function createDetectedInfo(item) {
     ]
   ];
 
-  for (const [labelKey, value] of values) {
-
+   for (const [labelKey, value] of values) {
   const span = document.createElement("span");
-
   const strong = document.createElement("strong");
-
   strong.textContent = `${t(labelKey)}: `;
-
   span.appendChild(strong);
-
-  if (
-    labelKey === "date"
-    && item.date
-  ) {
-
-    const dateLink = document.createElement("a");
-
-    dateLink.className = "date-link";
-
-    dateLink.href =
-      `https://lol.fandom.com/wiki/Data:ExternalContent/${item.date}`;
-
-    dateLink.target = "_blank";
-
-    dateLink.rel = "noopener noreferrer";
-
-    dateLink.title =
-      "Abrir página correspondente na Leaguepedia";
-
-    dateLink.textContent = item.date;
-
-    span.appendChild(dateLink);
-
-  } else {
-
-    span.appendChild(
-      document.createTextNode(value)
-    );
-
-  }
-
+  span.appendChild(
+    document.createTextNode(value)
+  );
   info.appendChild(span);
-
 }
-
   return info;
 }
 
 function addDetectedInfo(wrapper, item) {
-
   const info = createDetectedInfo(item);
-
   wrapper.appendChild(info);
-
 }
-
-
 /* =========================================================
    MANUAL EDITOR
 ========================================================= */
@@ -1128,25 +1088,31 @@ scrapeButton.addEventListener(
 
 
         const heading =
-          document.createElement("h2");
+        document.createElement("h2");
 
-        heading.textContent = t(
-          "dateHeading",
-          {
-            date
-          }
-        );
+         heading.className = "date-heading";
 
-        section.appendChild(heading);
+         const dateLink = document.createElement("a");
 
+         dateLink.href = `https://lol.fandom.com/wiki/Data:ExternalContent/${date}`;
 
+         dateLink.target = "_blank";
+
+         dateLink.rel =
+         "noopener noreferrer";
+
+         dateLink.textContent = t(
+           "dateHeading",
+           {
+             date
+           }
+         );
+         heading.appendChild(dateLink);
+         section.appendChild(heading);
         for (const item of items) {
-
           const wrapper =
             document.createElement("div");
-
           wrapper.className = "result";
-
 
           /* Title */
 
