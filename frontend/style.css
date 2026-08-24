@@ -801,3 +801,35 @@ button.secondary:hover:not(:disabled) {
   }
 
 }
+
+/* =========================================================
+   DATE LINK
+========================================================= */
+
+.date-link {
+  color: #475569;
+  font-weight: 600;
+  text-decoration: none;
+
+  border-bottom: 1px solid transparent;
+
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.date-link:hover {
+  color: #1e293b;
+  border-bottom-color: currentColor;
+}
+
+
+/* Dark mode */
+
+.dark-theme .date-link {
+  color: #93c5fd;
+}
+
+.dark-theme .date-link:hover {
+  color: #bfdbfe;
+}
