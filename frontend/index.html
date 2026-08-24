@@ -2,45 +2,100 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
   <title>Leaguepedia Interview Scraper</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+
   <main class="container">
 
     <header>
+
       <div class="header-top">
+
         <div>
-          <h1>Leaguepedia Interview Scraper </h1>
+
+          <h1>
+            Leaguepedia Interview Scraper
+          </h1>
 
           <p data-i18n="subtitle">
             Cole os links das matérias/vídeos e gere automaticamente o template
             <code>ExternalContent/Line</code>.
           </p>
+
         </div>
 
-        <div class="language-selector">
-          <label for="language" data-i18n="languageLabel">
-            Idioma
-          </label>
 
-          <select id="language" aria-label="Language">
-            <option value="pt-BR">🇧🇷 Português</option>
-            <option value="en">🇺🇸 English</option>
-            <option value="es">🇪🇸 Español</option>
-            <option value="fr">🇫🇷 Français</option>
-          </select>
+        <div class="header-controls">
+
+          <button
+            id="theme-toggle"
+            class="theme-toggle"
+            type="button"
+            aria-label="Alternar modo escuro"
+          >
+            🌙 Modo escuro
+          </button>
+
+
+          <div class="language-selector">
+
+            <label
+              for="language"
+              data-i18n="languageLabel"
+            >
+              Idioma
+            </label>
+
+            <select
+              id="language"
+              aria-label="Language"
+            >
+              <option value="pt-BR">
+                🇧🇷 Português
+              </option>
+
+              <option value="en">
+                🇺🇸 English
+              </option>
+
+              <option value="es">
+                🇪🇸 Español
+              </option>
+
+              <option value="fr">
+                🇫🇷 Français
+              </option>
+
+            </select>
+
+          </div>
+
         </div>
+
       </div>
+
     </header>
+
 
     <section class="card">
 
-      <label for="urls" data-i18n="linksLabel">
+      <label
+        for="urls"
+        data-i18n="linksLabel"
+      >
         Links das matérias
       </label>
+
 
       <textarea
         id="urls"
@@ -54,22 +109,42 @@ https://youtube.com/..."
         autofocus
       ></textarea>
 
+
       <div class="url-info">
-        <p class="hint" data-i18n="hint">
+
+        <p
+          class="hint"
+          data-i18n="hint"
+        >
           Publicação, torneio, tipo de conteúdo, tradutor e vídeo são detectados automaticamente.
         </p>
 
-        <span id="url-count" class="url-count">
+
+        <span
+          id="url-count"
+          class="url-count"
+        >
           0 / 10
         </span>
+
       </div>
 
-      <p class="limit-warning" id="limit-warning"></p>
+
+      <p
+        class="limit-warning"
+        id="limit-warning"
+      ></p>
+
 
       <div class="actions">
-        <button id="scrape" data-i18n="generateButton">
+
+        <button
+          id="scrape"
+          data-i18n="generateButton"
+        >
           Gerar Templates
         </button>
+
 
         <button
           id="clear"
@@ -78,20 +153,32 @@ https://youtube.com/..."
         >
           Limpar
         </button>
+
       </div>
 
-      <p id="status" class="status"></p>
 
-      <p class="api-note" data-i18n="apiNote">
+      <p
+        id="status"
+        class="status"
+      ></p>
+
+
+      <p
+        class="api-note"
+        data-i18n="apiNote"
+      >
         Para evitar uso excessivo da ferramenta, é possível processar até 10 links por vez. Atualmente exclusivamente para CBLOL.
       </p>
 
     </section>
 
+
     <section id="results"></section>
 
   </main>
 
+
   <script src="app.js"></script>
+
 </body>
 </html>
