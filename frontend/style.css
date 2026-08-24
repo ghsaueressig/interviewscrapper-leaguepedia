@@ -514,3 +514,131 @@ button.secondary:hover {
   }
 
 }
+
+/* =========================================================
+   RESULT ACTIONS
+========================================================= */
+
+.result-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.result-actions button {
+  margin: 0;
+}
+
+
+/* =========================================================
+   MANUAL EDITOR
+========================================================= */
+
+.manual-editor {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.manual-editor h3 {
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+
+.edit-hint {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
+
+.edit-fields {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(250px, 1fr)
+  );
+  gap: 14px;
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-field label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.edit-field input,
+.edit-field textarea,
+.edit-field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 10px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #1f1f1f;
+  color: inherit;
+  font: inherit;
+}
+
+.edit-field textarea {
+  resize: vertical;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.edit-actions button {
+  margin: 0;
+}
+
+.save-edit {
+  font-weight: 600;
+}
+
+.cancel-edit {
+  opacity: 0.8;
+}
+
+.edit {
+  opacity: 0.9;
+}
+
+.edit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+  .edit-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .result-actions,
+  .edit-actions {
+    flex-direction: column;
+  }
+
+  .result-actions button,
+  .edit-actions button {
+    width: 100%;
+  }
+
+}
