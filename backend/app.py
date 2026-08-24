@@ -10,7 +10,7 @@ import unicodedata
 from collections import defaultdict
 from data.players import PLAYER_DATA
 from data.teams import TEAM_MAP
-from leaguepedia import (
+from services.leaguepedia import (
     resolve_player,
     get_cached_player,
     cache_player,
