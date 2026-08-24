@@ -13,6 +13,76 @@ const limitWarningEl = document.getElementById("limit-warning");
 
 let isProcessing = false;
 
+/* =========================================================
+   THEME
+========================================================= */
+
+const themeToggle = document.getElementById(
+  "theme-toggle"
+);
+
+
+function updateThemeButton() {
+  const isDark = document.body.classList.contains(
+    "dark-theme"
+  );
+
+  if (isDark) {
+    themeToggle.textContent = "☀️ Modo claro";
+    themeToggle.setAttribute(
+      "aria-label",
+      "Alternar para modo claro"
+    );
+  } else {
+    themeToggle.textContent = "🌙 Modo escuro";
+    themeToggle.setAttribute(
+      "aria-label",
+      "Alternar para modo escuro"
+    );
+  }
+}
+
+
+function loadTheme() {
+  const savedTheme = localStorage.getItem(
+    "theme"
+  );
+
+  if (savedTheme === "dark") {
+    document.body.classList.add(
+      "dark-theme"
+    );
+  }
+
+  updateThemeButton();
+}
+
+
+themeToggle.addEventListener(
+  "click",
+  () => {
+    document.body.classList.toggle(
+      "dark-theme"
+    );
+
+    const isDark = document.body.classList.contains(
+      "dark-theme"
+    );
+
+    localStorage.setItem(
+      "theme",
+      isDark
+        ? "dark"
+        : "light"
+    );
+
+    updateThemeButton();
+  }
+);
+
+
+loadTheme();
+
 
 /* =========================================================
    TRANSLATIONS
