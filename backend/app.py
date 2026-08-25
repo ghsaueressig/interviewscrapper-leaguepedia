@@ -880,25 +880,35 @@ def scrape_article(url):
         ]
 
         # ==========================================
-        # DETECÇÃO DE JOGADORES CONHECIDOS
+        # DETECÇÃO DE JOGADORES
+        # PLAYER_DATA → CACHE → LEAGUEPEDIA
         # ==========================================
         
-        detected_player_keys = detect_players_from_text(
+        resolved_players = resolve_players_from_text(
             f"{title} {content_text}"
         )
         
-        for player_key in detected_player_keys:
+        for player in resolved_players.values():
         
-            player = PLAYER_DATA[player_key]
-        
-            found_players.append(
-                player["wiki"]
+            wiki_name = player.get(
+                "wiki",
+                ""
             )
         
-            found_teams.add(
-                player["team"]
+            team_name = player.get(
+                "team",
+                ""
             )
         
+            if wiki_name:
+                found_players.append(
+                    wiki_name
+                )
+        
+            if team_name:
+                found_teams.add(
+                    team_name
+                )
         
         # ==========================================
         # DETECÇÃO DE EQUIPES
