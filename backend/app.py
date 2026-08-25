@@ -336,17 +336,8 @@ def find_interviewee_in_text(text):
             possible_name
         )
 
-        if player:
-
-            cache_player(
-                possible_name,
-                player.get("wiki", ""),
-                player.get("team", ""),
-                player.get("role", "")
-            )
-
-            return player
-
+        player = resolve_player(candidate)
+        return player
     return None
 
 def detect_players_from_text(text):
@@ -458,15 +449,6 @@ def resolve_players_from_text(text):
         if not player:
 
             player = resolve_player(candidate)
-
-            if player:
-
-                cache_player(
-                    candidate,
-                    player.get("wiki", ""),
-                    player.get("team", ""),
-                    player.get("role", "")
-                )
 
         if not player:
             continue
