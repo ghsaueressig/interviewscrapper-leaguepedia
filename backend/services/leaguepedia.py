@@ -13,7 +13,7 @@ LEAGUEPEDIA_API_URL = (
     "https://lol.fandom.com/api.php"
 )
 
-REQUEST_TIMEOUT = 10
+REQUEST_TIMEOUT = 5
 
 BASE_DIR = os.path.dirname(
     os.path.abspath(__file__)
@@ -234,8 +234,8 @@ def cargo_query(
         LEAGUEPEDIA_API_URL,
         params=params,
         headers=REQUEST_HEADERS,
-        timeout=10
-    )
+        timeout=REQUEST_TIMEOUT
+)
 
     response.raise_for_status()
     data = response.json()
