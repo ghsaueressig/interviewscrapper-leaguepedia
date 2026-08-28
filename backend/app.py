@@ -403,7 +403,7 @@ def resolve_players_from_text(text):
                 "role": player_data.get("role", "")
             }
 
-    # ==================================================
+        # ==================================================
     # 2. EXTRAÇÃO DE POSSÍVEIS NOMES
     # ==================================================
 
@@ -424,6 +424,10 @@ def resolve_players_from_text(text):
         if normalized in STOPWORDS:
             continue
 
+        # Evita palavras muito comuns.
+        if len(normalized) < 3:
+            continue
+
         candidates.append(word)
 
     candidates = list(
@@ -431,33 +435,51 @@ def resolve_players_from_text(text):
     )
 
     # ==================================================
-    # 3. CACHE + LEAGUEPEDIA
+    # 3. CACHE
     # ==================================================
+
+    uncached_candidates = []
 
     for candidate in candidates:
 
         player_key = normalize_text(candidate)
 
-        # Evita repetir consultas.
         if player_key in found_players:
             continue
 
-        # Primeiro verifica cache.
         player = get_cached_player(candidate)
 
-        # Se não estiver no cache,
-        # consulta a Leaguepedia.
-        if not player:
+        if player:
 
-            player = resolve_player(candidate)
+            wiki_name = player.get("wiki", "")
+
+            if wiki_name:
+                found_players[player_key] = player
+
+        else:
+
+            uncached_candidates.append(candidate)
+
+    # ==================================================
+    # 4. LEAGUEPEDIA
+    # Limite de segurança para evitar dezenas de requests
+    # ==================================================
+
+    MAX_LEAGUEPEDIA_CANDIDATES = 10
+
+    for candidate in uncached_candidates[
+        :MAX_LEAGUEPEDIA_CANDIDATES
+    ]:
+
+        player_key = normalize_text(candidate)
+
+        player = resolve_player(candidate)
 
         if not player:
             continue
 
         wiki_name = player.get("wiki", "")
 
-        # Segurança:
-        # só aceita se existir um nome válido.
         if not wiki_name:
             continue
 
