@@ -8,6 +8,8 @@ PUBLICATIONS = {
 WRITTEN_PUBLICATIONS = {
     "maisesports.com.br",
     "sheepesports.com",
+    "pichauarena.com.br",
+    "itatiaia.com.br",
 }
 
 VIDEO_DOMAINS = {
