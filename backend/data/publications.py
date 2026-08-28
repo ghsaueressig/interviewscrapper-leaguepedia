@@ -1,14 +1,14 @@
 PUBLICATIONS = {
     "maisesports.com.br": "Mais Esports",
     "sheepesports.com": "Sheep Esports",
+    "pichauarena.com.br": "Pichau Arena",
+    "itatiaia.com.br": "Rádio Itatiaia",
 }
-
 
 WRITTEN_PUBLICATIONS = {
     "maisesports.com.br",
     "sheepesports.com",
 }
-
 
 VIDEO_DOMAINS = {
     "youtube.com",
