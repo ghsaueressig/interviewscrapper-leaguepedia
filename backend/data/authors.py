@@ -12,15 +12,15 @@ AUTHOR_MAPPINGS = [
         "wiki": "[[Diniz]]"
     },
     {
-        "matches": ["Nicole Pereira"]
+        "matches": ["Nicole Pereira"],
         "wiki": "[[Nicole Pereira]]"
     },
     {
-        "matches": ["Wladimir Neto"]
+        "matches": ["Wladimir Neto"],
         "wiki": "[[Wladimir Neto]]"
     },
     {
-        "matches": ["João Pedro Andrada"]
+        "matches": ["João Pedro Andrada"],
         "wiki": "[[João Pedro Andrada]]"
     },
 ]
