@@ -7,4 +7,8 @@ AUTHOR_MAPPINGS = [
         "matches": ["Ian Teixeira"],
         "wiki": "[[Ian Teixeira]]"
     }
+    {
+        "matches": ["Diniz"],
+        "wiki": "[[Diniz]]"
+    }
 ]
