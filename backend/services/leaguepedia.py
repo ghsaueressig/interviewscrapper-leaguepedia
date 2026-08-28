@@ -233,14 +233,12 @@ def cargo_query(
     response = requests.get(
         LEAGUEPEDIA_API_URL,
         params=params,
-        timeout=REQUEST_TIMEOUT,
-        headers=REQUEST_HEADERS
+        headers=REQUEST_HEADERS,
+        timeout=10
     )
 
     response.raise_for_status()
-
     data = response.json()
-
     results = data.get(
         "cargoquery",
         []
