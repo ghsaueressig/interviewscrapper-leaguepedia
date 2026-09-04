@@ -583,3 +583,7 @@ def get_tournament_players(tournament_name):
         )
 
     return players
+
+if __name__ == "__main__":
+    resultado = resolve_player("Robo")
+    print(resultado)
