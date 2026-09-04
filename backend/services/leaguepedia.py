@@ -255,86 +255,18 @@ def cargo_query(
 # ==================================================
 
 def search_player(player_name):
-    """
-    Procura um jogador na tabela Players.
-    """
+    print(f"[TESTE PLAYERS] Buscando registros da tabela Players")
 
-    if not player_name:
-        return None
-
-    player_name = player_name.strip()
-
-    escaped_name = player_name.replace(
-        "'",
-        "\\'"
+    results = cargo_query(
+        tables="Players",
+        fields="ID,OverviewPage,Player,Team,CurrentTeams",
+        limit=10,
     )
 
-    try:
+    print(f"[TESTE PLAYERS] Quantidade: {len(results)}")
+    print(f"[TESTE PLAYERS] Resultados: {results}")
 
-        results = cargo_query(
-            tables="Players",
-            fields=(
-                "ID,"
-                "OverviewPage,"
-                "Player,"
-                "Team,"
-                "CurrentTeams"
-            ),
-            where=f'ID="{escaped_name}"',
-            limit=10
-        )
-
-    except requests.RequestException:
-        return None
-
-    if not results:
-        return None
-
-    normalized_search = normalize_text(
-        player_name
-    )
-
-    selected = None
-
-    for result in results:
-
-        player_id = normalize_text(
-            result.get(
-                "ID",
-                ""
-            )
-        )
-
-        if player_id == normalized_search:
-            selected = result
-            break
-
-    if not selected:
-        selected = results[0]
-
-    return {
-        "id": selected.get(
-            "ID",
-            ""
-        ),
-        "wiki": (
-            selected.get(
-                "Player"
-            )
-            or selected.get(
-                "OverviewPage"
-            )
-            or selected.get(
-                "ID",
-                ""
-            )
-        ),
-        "team": selected.get(
-            "Team",
-            ""
-        ),
-        "role": "",
-    }
+    return None
 
 
 # ==================================================
