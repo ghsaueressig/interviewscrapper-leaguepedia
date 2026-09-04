@@ -1083,3 +1083,11 @@ def scrape():
         "results": results,
         "grouped": dict(sorted(grouped.items())),
     })
+
+@app.route("/api/test-player/<player_name>")
+def test_player(player_name):
+    result = resolve_player(player_name)
+    return jsonify({
+        "query": player_name,
+        "result": result
+    })
