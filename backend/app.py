@@ -333,11 +333,7 @@ def find_interviewee_in_text(text):
             return player
 
         # Finalmente Leaguepedia.
-        player = resolve_player(
-            possible_name
-        )
-
-        player = resolve_player(candidate)
+        player = resolve_player(possible_name)
         return player
     return None
 
@@ -465,7 +461,7 @@ def resolve_players_from_text(text):
     # Limite de segurança para evitar dezenas de requests
     # ==================================================
 
-    MAX_LEAGUEPEDIA_CANDIDATES = 10
+    MAX_LEAGUEPEDIA_CANDIDATES = 3
 
     for candidate in uncached_candidates[
         :MAX_LEAGUEPEDIA_CANDIDATES
