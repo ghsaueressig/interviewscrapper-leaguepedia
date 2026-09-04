@@ -255,19 +255,28 @@ def cargo_query(
 # ==================================================
 
 def search_player(player_name):
-    print(f"[TESTE PLAYERS] Buscando registros da tabela Players")
+    escaped_name = player_name.replace('"', '\\"')
 
     results = cargo_query(
         tables="Players",
         fields="ID,OverviewPage,Player,Team,CurrentTeams",
-        limit=10,
+        where=f'OverviewPage="{escaped_name}"',
+        limit=20,
     )
 
-    print(f"[TESTE PLAYERS] Quantidade: {len(results)}")
-    print(f"[TESTE PLAYERS] Resultados: {results}")
+    normalized_target = normalize_name(player_name)
+
+    for row in results:
+        if normalize_name(row.get("OverviewPage", "")) == normalized_target:
+            return {
+                "id": row.get("ID"),
+                "name": row.get("Player") or row.get("OverviewPage"),
+                "team": row.get("Team"),
+                "current_teams": row.get("CurrentTeams"),
+                "overview_page": row.get("OverviewPage"),
+            }
 
     return None
-
 
 # ==================================================
 # BUSCA ATUAL DE JOGADOR
