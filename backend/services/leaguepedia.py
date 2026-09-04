@@ -345,6 +345,9 @@ def get_current_player(player_name):
     """
     Busca informações atuais do jogador
     na tabela ListplayerCurrent.
+
+    TEMPORÁRIO: imprime no log do Render
+    o resultado bruto da consulta para diagnóstico.
     """
 
     if not player_name:
@@ -372,10 +375,30 @@ def get_current_player(player_name):
             limit=10
         )
 
-    except requests.RequestException:
+        print(
+            f"[TESTE LEAGUEPEDIA] "
+            f"Busca por: {player_name}"
+        )
+
+        print(
+            f"[TESTE LEAGUEPEDIA] "
+            f"Resultado bruto: {results}"
+        )
+
+    except requests.RequestException as exc:
+
+        print(
+            f"[TESTE LEAGUEPEDIA] "
+            f"Erro na consulta: {exc}"
+        )
+
         return None
 
     if not results:
+        print(
+            f"[TESTE LEAGUEPEDIA] "
+            f"NENHUM resultado para {player_name}"
+        )
         return None
 
     normalized_search = normalize_text(
@@ -425,7 +448,6 @@ def get_current_player(player_name):
             ""
         ),
     }
-
 
 # ==================================================
 # RESOLUÇÃO DE JOGADOR
