@@ -303,7 +303,7 @@ def get_current_player(player_name):
                 "Role,"
                 "Team"
             ),
-            where=f'ID="{escaped_name}"',
+            where=f'OverviewPage="{escaped_name}"'
             limit=10
         )
 
