@@ -264,10 +264,10 @@ def search_player(player_name):
         limit=20,
     )
 
-    normalized_target = normalize_name(player_name)
+    normalized_target = normalize_text(player_name)
 
     for row in results:
-        if normalize_name(row.get("OverviewPage", "")) == normalized_target:
+        if normalize_text(row.get("OverviewPage", "")) == normalized_target:
             return {
                 "id": row.get("ID"),
                 "name": row.get("Player") or row.get("OverviewPage"),
