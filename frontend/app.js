@@ -457,6 +457,47 @@ function getUrls() {
     .filter(Boolean);
 }
 
+const USED_URLS_KEY = "leaguepedia-scraper-used-urls";
+
+function getUsedUrls() {
+  try {
+    return JSON.parse(
+      localStorage.getItem(USED_URLS_KEY) || "[]"
+    );
+  } catch {
+    return [];
+  }
+}
+
+function saveUsedUrls(urls) {
+  localStorage.setItem(
+    USED_URLS_KEY,
+    JSON.stringify(urls)
+  );
+}
+
+function normalizeUrl(url) {
+  return url
+    .trim()
+    .replace(/\/+$/, "");
+}
+
+function getNewUrls(urls) {
+  const usedUrls = getUsedUrls();
+
+  return urls.filter(
+    url => !usedUrls.includes(normalizeUrl(url))
+  );
+}
+
+function getAlreadyUsedUrls(urls) {
+  const usedUrls = getUsedUrls();
+
+  return urls.filter(
+    url => usedUrls.includes(normalizeUrl(url))
+  );
+}
+
 function updateUrlCount() {
 
   const urls = getUrls();
@@ -496,12 +537,10 @@ function updateUrlCount() {
   }
 
 }
-
 urlsInput.addEventListener(
   "input",
   updateUrlCount
 );
-
 
 /* =========================================================
    TEMPLATE
