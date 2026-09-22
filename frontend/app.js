@@ -1022,40 +1022,46 @@ scrapeButton.addEventListener(
 
     const urls = getUrls();
 
-    if (!urls.length) {
-
-      statusEl.textContent = t(
-        "noUrls"
-      );
-
-      return;
-    }
-
-    if (urls.length > MAX_URLS) {
-
-      statusEl.textContent = t(
-        "tooManyUrls"
-      );
-
-      return;
-    }
-
-    isProcessing = true;
-
-    scrapeButton.disabled = true;
-
-    scrapeButton.textContent = t(
-      "processingDisabled"
-    );
-
-    statusEl.textContent = t(
-      "processing",
-      {
-        count: urls.length
+      if (!urls.length) {
+        statusEl.textContent = t("noUrls");
+        return;
       }
-    );
-
-    resultsEl.innerHTML = "";
+      
+      if (urls.length > MAX_URLS) {
+        statusEl.textContent = t("tooManyUrls");
+        return;
+      }
+      
+      const alreadyUsed = getAlreadyUsedUrls(urls);
+      const newUrls = getNewUrls(urls);
+      
+      if (!newUrls.length) {
+        statusEl.textContent =
+          `⚠️ Todos os ${urls.length} links já foram utilizados anteriormente.`;
+      
+        resultsEl.innerHTML = "";
+      
+        for (const url of alreadyUsed) {
+          const warning = document.createElement("div");
+          warning.className = "error-item";
+          warning.textContent =
+            `⚠️ Link já utilizado anteriormente: ${url}`;
+          resultsEl.appendChild(warning);
+        }
+      
+        return;
+      }
+      
+      isProcessing = true;
+      scrapeButton.disabled = true;
+      scrapeButton.textContent = t("processingDisabled");
+      
+      statusEl.textContent =
+        alreadyUsed.length
+          ? `Processando ${newUrls.length} link(s) novo(s). ${alreadyUsed.length} já utilizado(s) será(ão) ignorado(s).`
+          : t("processing", { count: newUrls.length });
+      
+      resultsEl.innerHTML = "";
 
 
     try {
@@ -1070,8 +1076,8 @@ scrapeButton.addEventListener(
           },
 
           body: JSON.stringify({
-            urls
-          })
+            urls: newUrls
+         })
         }
       );
 
@@ -1092,8 +1098,22 @@ scrapeButton.addEventListener(
       const successful = data.results.filter(
         item => !item.error
       );
+       
+      const successfulUrls = successful
+     .map(item => item.url)
+     .filter(Boolean)
+     .map(normalizeUrl);
 
+      if (successfulUrls.length) {
+     const usedUrls = getUsedUrls();
 
+     saveUsedUrls([
+       ...new Set([
+         ...usedUrls,
+         ...successfulUrls
+          ])
+     ]);
+   }
       statusEl.textContent =
         t(
           "processed",
