@@ -2,6 +2,7 @@ import json
 import os
 import unicodedata
 import requests
+import re
 from difflib import SequenceMatcher
 from data.players import PLAYER_DATA
 
@@ -653,3 +654,62 @@ def fuzzy_match_players(player_name, threshold=0.60, limit=3):
     )
 
     return matches[:limit]
+
+def extract_fuzzy_player_candidates(text, threshold=0.70):
+    """
+    Analisa palavras do texto e procura possíveis nicknames
+    usando fuzzy matching.
+
+    Retorna apenas termos que:
+    - não sejam jogadores já conhecidos;
+    - tenham tamanho mínimo razoável;
+    - tenham algum candidato fuzzy acima do threshold.
+    """
+
+    if not text:
+        return []
+
+    # Extrai palavras permitindo letras, números, _ e -
+    words = re.findall(
+        r"\b[\w-]+\b",
+        text,
+        flags=re.UNICODE
+    )
+
+    results = []
+    seen = set()
+
+    for word in words:
+        normalized = word.lower().strip()
+
+        # Evita processar a mesma palavra várias vezes
+        if normalized in seen:
+            continue
+
+        seen.add(normalized)
+
+        # Nicknames muito pequenos produzem muitos falsos positivos
+        if len(normalized) < 4:
+            continue
+
+        # Já é um jogador conhecido.
+        # Portanto não precisamos de fuzzy.
+        if normalized in PLAYER_DATA:
+            continue
+
+        candidates = fuzzy_match_players(
+            normalized,
+            threshold=threshold,
+            limit=3
+        )
+
+        if not candidates:
+            continue
+
+        results.append({
+            "text": word,
+            "normalized": normalized,
+            "candidates": candidates
+        })
+
+    return results
