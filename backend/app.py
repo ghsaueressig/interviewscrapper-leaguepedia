@@ -780,6 +780,9 @@ def scrape_article(url):
             '{{!}}'
         )
 
+        # Texto completo usado nas detecções
+        full_text = f"{title} {content_text}"
+
         # ==============================
         # AUTOR
         # ==============================
@@ -878,6 +881,8 @@ def scrape_article(url):
             for part in slug_parts
         ]
 
+        # Mantido porque pode ser útil para
+        # detecções baseadas no slug posteriormente.
         players_in_slug = [
             part
             for part in slug_lower
@@ -888,63 +893,78 @@ def scrape_article(url):
         # DETECÇÃO DE JOGADORES
         # PLAYER_DATA → CACHE → LEAGUEPEDIA
         # ==========================================
-        
+
         resolved_players = resolve_players_from_text(
-            f"{title} {content_text}"
+            full_text
         )
-        
+
         for player in resolved_players.values():
-        
+
             wiki_name = player.get(
                 "wiki",
                 ""
             )
-        
+
             team_name = player.get(
                 "team",
                 ""
             )
-        
+
             if wiki_name:
                 found_players.append(
                     wiki_name
                 )
-        
+
             if team_name:
                 found_teams.add(
                     team_name
                 )
-        
+
+        # ==========================================
+        # FUZZY PLAYER CANDIDATES
+        # ==========================================
+
+        fuzzy_candidates = extract_fuzzy_player_candidates(
+            full_text,
+            threshold=0.70
+        )
+
         # ==========================================
         # DETECÇÃO DE EQUIPES
         # ==========================================
-        
+
         for part in slug_lower:
-        
+
             if part in TEAM_MAP:
-        
+
                 found_teams.add(
                     TEAM_MAP[part]
                 )
-        
+
         # ==============================
         # DETECÇÕES
         # ==============================
 
-        publication = detect_publication(url)
+        publication = detect_publication(
+            url
+        )
+
         tournament = detect_tournament(
             date_published,
             title,
             content_text,
             url
         )
+
         content_type = detect_type(
             title,
             content_text
         )
+
         translator = detect_translator(
             content_text
         )
+
         isvideo = detect_video(
             url,
             soup
@@ -971,7 +991,11 @@ def scrape_article(url):
             'publication': publication,
             'type': content_type,
             'translator': translator,
-            'isvideo': isvideo
+            'isvideo': isvideo,
+
+            # Ainda não altera o template.
+            # Apenas envia as sugestões ao frontend.
+            'fuzzy_candidates': fuzzy_candidates
         }
 
     except requests.RequestException as exc:
@@ -981,6 +1005,7 @@ def scrape_article(url):
                 f'Erro ao acessar a página: {exc}'
             )
         }
+
     except Exception as exc:
         return {
             'url': url,
