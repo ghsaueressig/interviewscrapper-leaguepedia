@@ -1015,32 +1015,62 @@ function openManualEditor(
 scrapeButton.addEventListener(
   "click",
   async () => {
-
     if (isProcessing) {
       return;
     }
-
-    const urls = getUrls();
-
-      if (!urls.length) {
-        statusEl.textContent = t("noUrls");
-        return;
-      }
-      
-      if (urls.length > MAX_URLS) {
-        statusEl.textContent = t("tooManyUrls");
-        return;
-      }
-      
-      const alreadyUsed = getAlreadyUsedUrls(urls);
-      const newUrls = getNewUrls(urls);
-      
-      if (!newUrls.length) {
+        const urls = getUrls();
+    if (!urls.length) {
+      statusEl.textContent = t("noUrls");
+      return;
+    }
+    if (urls.length > MAX_URLS) {
+      statusEl.textContent = t("tooManyUrls");
+      return;
+    }
+    const alreadyUsed = getAlreadyUsedUrls(urls);
+    /*
+     * Se houver URLs já processadas, avisa o usuário,
+     * mas permite processá-las novamente.
+     */
+    if (alreadyUsed.length > 0) {
+      const repeatedList = alreadyUsed
+        .map(url => `• ${url}`)
+        .join("\n");
+      const message =
+        alreadyUsed.length === 1
+          ? (
+              "⚠️ Esta URL já foi processada anteriormente:\n\n" +
+              repeatedList +
+              "\n\nDeseja processá-la novamente?"
+            )
+          : (
+              `⚠️ ${alreadyUsed.length} URLs já foram processadas anteriormente:\n\n` +
+              repeatedList +
+              "\n\nDeseja processá-las novamente?"
+            );
+      const shouldContinue = window.confirm(message);
+      if (!shouldContinue) {
         statusEl.textContent =
-          `⚠️ Todos os ${urls.length} links já foram utilizados anteriormente.`;
-      
-        resultsEl.innerHTML = "";
-      
+          "Processamento cancelado.";
+        return;
+      }
+    }
+    isProcessing = true;
+    scrapeButton.disabled = true;
+    scrapeButton.textContent =
+      t("processingDisabled");
+    statusEl.textContent =
+      alreadyUsed.length
+        ? `Processando ${urls.length} link(s), incluindo ${alreadyUsed.length} já utilizado(s)...`
+        : t(
+            "processing",
+            {
+              count: urls.length
+            }
+          );
+
+    resultsEl.innerHTML = "";
+     
         for (const url of alreadyUsed) {
           const warning = document.createElement("div");
           warning.className = "error-item";
@@ -1076,7 +1106,7 @@ scrapeButton.addEventListener(
           },
 
           body: JSON.stringify({
-            urls: newUrls
+            urls: urls
          })
         }
       );
