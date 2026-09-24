@@ -1018,47 +1018,55 @@ scrapeButton.addEventListener(
     if (isProcessing) {
       return;
     }
-        const urls = getUrls();
+
+    const urls = getUrls();
+
     if (!urls.length) {
       statusEl.textContent = t("noUrls");
       return;
     }
+
     if (urls.length > MAX_URLS) {
       statusEl.textContent = t("tooManyUrls");
       return;
     }
+
     const alreadyUsed = getAlreadyUsedUrls(urls);
+
     /*
      * Se houver URLs já processadas, avisa o usuário,
      * mas permite processá-las novamente.
      */
     if (alreadyUsed.length > 0) {
-      const repeatedList = alreadyUsed
-        .map(url => `• ${url}`)
-        .join("\n");
       const message =
         alreadyUsed.length === 1
           ? (
               "⚠️ Esta URL já foi processada anteriormente:\n\n" +
-              repeatedList +
+              alreadyUsed[0] +
               "\n\nDeseja processá-la novamente?"
             )
           : (
               `⚠️ ${alreadyUsed.length} URLs já foram processadas anteriormente:\n\n` +
-              repeatedList +
+              alreadyUsed
+                .map(url => `• ${url}`)
+                .join("\n") +
               "\n\nDeseja processá-las novamente?"
             );
+
       const shouldContinue = window.confirm(message);
+
       if (!shouldContinue) {
         statusEl.textContent =
           "Processamento cancelado.";
         return;
       }
     }
+
     isProcessing = true;
     scrapeButton.disabled = true;
     scrapeButton.textContent =
       t("processingDisabled");
+
     statusEl.textContent =
       alreadyUsed.length
         ? `Processando ${urls.length} link(s), incluindo ${alreadyUsed.length} já utilizado(s)...`
@@ -1070,29 +1078,6 @@ scrapeButton.addEventListener(
           );
 
     resultsEl.innerHTML = "";
-     
-        for (const url of alreadyUsed) {
-          const warning = document.createElement("div");
-          warning.className = "error-item";
-          warning.textContent =
-            `⚠️ Link já utilizado anteriormente: ${url}`;
-          resultsEl.appendChild(warning);
-        }
-      
-        return;
-      }
-      
-      isProcessing = true;
-      scrapeButton.disabled = true;
-      scrapeButton.textContent = t("processingDisabled");
-      
-      statusEl.textContent =
-        alreadyUsed.length
-          ? `Processando ${newUrls.length} link(s) novo(s). ${alreadyUsed.length} já utilizado(s) será(ão) ignorado(s).`
-          : t("processing", { count: newUrls.length });
-      
-      resultsEl.innerHTML = "";
-
 
     try {
 
