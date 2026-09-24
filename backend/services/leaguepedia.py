@@ -598,3 +598,58 @@ def fuzzy_match_player(player_name, threshold=0.80):
         return best_match
 
     return None
+
+def fuzzy_match_players(player_name, threshold=0.60, limit=3):
+    """
+    Retorna os jogadores mais parecidos com um possível nickname.
+
+    Esta função NÃO confirma que o texto é um jogador.
+    Ela apenas gera sugestões para posterior confirmação do usuário.
+    """
+
+    normalized_input = player_name.strip().lower()
+
+    if not normalized_input:
+        return []
+
+    matches = []
+
+    for player_id, player_data in PLAYER_DATA.items():
+        player_name_wiki = player_data["wiki"]
+        team = player_data["team"]
+
+        # Para fuzzy matching, o ID é normalmente a melhor representação
+        # do nickname. O campo wiki também pode conter desambiguação.
+        candidates = {
+            player_id,
+            player_name_wiki
+        }
+
+        best_player_score = 0
+
+        for candidate in candidates:
+            normalized_candidate = candidate.strip().lower()
+
+            score = SequenceMatcher(
+                None,
+                normalized_input,
+                normalized_candidate
+            ).ratio()
+
+            if score > best_player_score:
+                best_player_score = score
+
+        if best_player_score >= threshold:
+            matches.append({
+                "player_id": player_id,
+                "player": player_name_wiki,
+                "team": team,
+                "confidence": round(best_player_score, 3)
+            })
+
+    matches.sort(
+        key=lambda match: match["confidence"],
+        reverse=True
+    )
+
+    return matches[:limit]
