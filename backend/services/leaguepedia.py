@@ -3,7 +3,7 @@ import os
 import unicodedata
 import requests
 from difflib import SequenceMatcher
-
+from data.players import PLAYER_DATA
 
 # ==================================================
 # CONFIGURAÇÃO
@@ -555,34 +555,11 @@ if __name__ == "__main__":
 # TESTANDO FUZZY 
 # ======================================
 
-FUZZY_TEST_PLAYERS = {
-    "Robo": "paiN Gaming",
-    "Tutsz": "FURIA",
-    "Tatu": "FURIA",
-    "Guigo": "FURIA",
-    "Ayu": "FURIA",
-    "JoJo": "FURIA",
-}
-
-def fuzzy_match_player(player_name, players, threshold=0.80):
+def fuzzy_match_player(player_name, threshold=0.80):
     """
-    Procura o jogador mais parecido com o nome informado.
+    Procura o jogador mais parecido dentro do PLAYER_DATA.
 
-    players deve ser um dicionário no formato:
-    {
-        "Robo": "paiN Gaming",
-        "Tutsz": "FURIA",
-        "Tatu": "FURIA",
-    }
-
-    Retorna:
-    {
-        "player": "Robo",
-        "team": "paiN Gaming",
-        "confidence": 0.92
-    }
-
-    ou None caso nenhum resultado atinja o threshold.
+    Retorna None quando nenhum resultado atinge o threshold.
     """
 
     normalized_input = player_name.strip().lower()
@@ -593,22 +570,29 @@ def fuzzy_match_player(player_name, players, threshold=0.80):
     best_match = None
     best_score = 0
 
-    for player, team in players.items():
-        normalized_player = player.strip().lower()
+    for player_id, player_data in PLAYER_DATA.items():
+        player_name_wiki = player_data["wiki"]
+        team = player_data["team"]
 
-        score = SequenceMatcher(
-            None,
-            normalized_input,
-            normalized_player
-        ).ratio()
+        candidates = {
+            player_id,
+            player_name_wiki
+        }
 
-        if score > best_score:
-            best_score = score
-            best_match = {
-                "player": player,
-                "team": team,
-                "confidence": round(score, 3)
-            }
+        for candidate in candidates:
+            score = SequenceMatcher(
+                None,
+                normalized_input,
+                candidate.lower()
+            ).ratio()
+
+            if score > best_score:
+                best_score = score
+                best_match = {
+                    "player": player_name_wiki,
+                    "team": team,
+                    "confidence": round(score, 3)
+                }
 
     if best_match and best_score >= threshold:
         return best_match
