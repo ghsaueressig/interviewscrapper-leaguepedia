@@ -19,6 +19,7 @@ from services.leaguepedia import (
     search_player,
     fuzzy_match_player,
     fuzzy_match_players,
+    extract_fuzzy_player_candidates,
 )
 from data.content import (
     STOPWORDS,
@@ -1018,6 +1019,24 @@ def test_fuzzy(player_name):
         "query": player_name,
         "best_match": best_match,
         "candidates": candidates
+    })
+
+@app.route("/api/test-fuzzy-text", methods=["POST"])
+def test_fuzzy_text():
+    data = request.get_json(silent=True) or {}
+    text = data.get("text", "")
+    if not text.strip():
+        return jsonify({
+            "error": "Text is required."
+        }), 400
+
+    results = extract_fuzzy_player_candidates(
+        text,
+        threshold=0.70
+    )
+    return jsonify({
+        "text": text,
+        "candidates": results
     })
 
 @app.get('/api/health')
