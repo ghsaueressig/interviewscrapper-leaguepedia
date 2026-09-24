@@ -121,23 +121,24 @@ header {
 .header-top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 h1 {
-  margin: 0 0 6px;
+  margin: 0;
 
-  font-size: clamp(2rem, 4vw, 2.8rem);
-  line-height: 1.1;
+  font-size: clamp(1.85rem, 4vw, 2.6rem);
+  line-height: 1.15;
 }
 
 header p {
-  margin: 0;
+  margin: 10px 0 0;
 
   color: var(--text-soft);
   font-size: 1rem;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 code {
@@ -148,6 +149,7 @@ code {
   background: var(--code-bg);
 
   font-size: 0.9em;
+  white-space: nowrap;
 }
 
 
@@ -163,12 +165,20 @@ code {
 }
 
 .theme-toggle {
-  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 42px;
+  min-height: 42px;
+  padding: 8px 10px;
 
   background: var(--secondary);
   color: var(--secondary-text);
 
-  font-size: 0.9rem;
+  font-size: 1.05rem;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .theme-toggle:hover:not(:disabled) {

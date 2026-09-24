@@ -23,18 +23,22 @@ const themeToggle = document.getElementById(
 
 
 function updateThemeButton() {
+  if (!themeToggle) {
+    return;
+  }
+
   const isDark = document.body.classList.contains(
     "dark-theme"
   );
 
   if (isDark) {
-    themeToggle.textContent = "☀️ ";
+    themeToggle.textContent = "☀️";
     themeToggle.setAttribute(
       "aria-label",
       "Alternar para modo claro"
     );
   } else {
-    themeToggle.textContent = "🌙 ";
+    themeToggle.textContent = "🌙";
     themeToggle.setAttribute(
       "aria-label",
       "Alternar para modo escuro"
@@ -58,27 +62,29 @@ function loadTheme() {
 }
 
 
-themeToggle.addEventListener(
-  "click",
-  () => {
-    document.body.classList.toggle(
-      "dark-theme"
-    );
+if (themeToggle) {
+  themeToggle.addEventListener(
+    "click",
+    () => {
+      document.body.classList.toggle(
+        "dark-theme"
+      );
 
-    const isDark = document.body.classList.contains(
-      "dark-theme"
-    );
+      const isDark = document.body.classList.contains(
+        "dark-theme"
+      );
 
-    localStorage.setItem(
-      "theme",
-      isDark
-        ? "dark"
-        : "light"
-    );
+      localStorage.setItem(
+        "theme",
+        isDark
+          ? "dark"
+          : "light"
+      );
 
-    updateThemeButton();
-  }
-);
+      updateThemeButton();
+    }
+  );
+}
 
 
 loadTheme();
