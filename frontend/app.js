@@ -159,7 +159,16 @@ https://youtube.com/...`,
     urlCount: "{count} / " + MAX_URLS,
     limitWarning: `⚠️ Máximo de ${MAX_URLS} links por requisição.`,
 
-    unsupportedType: "Não identificado"
+    unsupportedType: "Não identificado",
+
+    usedUrlTitle: "URL já processada",
+    usedUrlsTitle: "{count} URLs já processadas",
+    usedUrlLead: "Esta URL já foi processada anteriormente:",
+    usedUrlsLead: "Estas URLs já foram processadas anteriormente:",
+    usedUrlQuestion: "Deseja processá-la novamente?",
+    usedUrlsQuestion: "Deseja processá-las novamente?",
+    confirmProcessAgain: "Processar novamente",
+    processingCancelled: "Processamento cancelado."
   },
 
 
@@ -227,7 +236,16 @@ https://youtube.com/...`,
     urlCount: "{count} / " + MAX_URLS,
     limitWarning: `⚠️ Maximum of ${MAX_URLS} links per request.`,
 
-    unsupportedType: "Not identified"
+    unsupportedType: "Not identified",
+
+    usedUrlTitle: "URL already processed",
+    usedUrlsTitle: "{count} URLs already processed",
+    usedUrlLead: "This URL was already processed before:",
+    usedUrlsLead: "These URLs were already processed before:",
+    usedUrlQuestion: "Do you want to process it again?",
+    usedUrlsQuestion: "Do you want to process them again?",
+    confirmProcessAgain: "Process again",
+    processingCancelled: "Processing cancelled."
   },
 
 
@@ -295,7 +313,16 @@ https://youtube.com/...`,
     urlCount: "{count} / " + MAX_URLS,
     limitWarning: `⚠️ Máximo de ${MAX_URLS} enlaces por solicitud.`,
 
-    unsupportedType: "No identificado"
+    unsupportedType: "No identificado",
+
+    usedUrlTitle: "URL ya procesada",
+    usedUrlsTitle: "{count} URLs ya procesadas",
+    usedUrlLead: "Esta URL ya fue procesada anteriormente:",
+    usedUrlsLead: "Estas URLs ya fueron procesadas anteriormente:",
+    usedUrlQuestion: "¿Deseas procesarla de nuevo?",
+    usedUrlsQuestion: "¿Deseas procesarlas de nuevo?",
+    confirmProcessAgain: "Procesar de nuevo",
+    processingCancelled: "Procesamiento cancelado."
   },
 
 
@@ -363,7 +390,16 @@ https://youtube.com/...`,
     urlCount: "{count} / " + MAX_URLS,
     limitWarning: `⚠️ Maximum de ${MAX_URLS} liens par requête.`,
 
-    unsupportedType: "Non identifié"
+    unsupportedType: "Non identifié",
+
+    usedUrlTitle: "URL déjà traitée",
+    usedUrlsTitle: "{count} URLs déjà traitées",
+    usedUrlLead: "Cette URL a déjà été traitée auparavant :",
+    usedUrlsLead: "Ces URLs ont déjà été traitées auparavant :",
+    usedUrlQuestion: "Voulez-vous la traiter à nouveau ?",
+    usedUrlsQuestion: "Voulez-vous les traiter à nouveau ?",
+    confirmProcessAgain: "Traiter à nouveau",
+    processingCancelled: "Traitement annulé."
   }
 };
 
@@ -1015,6 +1051,106 @@ function openManualEditor(
 
 
 /* =========================================================
+   CONFIRM MODAL
+========================================================= */
+
+function confirmUsedUrls(alreadyUsed) {
+  const modal = document.getElementById("confirm-modal");
+  const titleEl = document.getElementById("confirm-modal-title");
+  const leadEl = document.getElementById("confirm-modal-lead");
+  const listEl = document.getElementById("confirm-modal-list");
+  const questionEl = document.getElementById("confirm-modal-question");
+  const cancelButton = document.getElementById("confirm-modal-cancel");
+  const okButton = document.getElementById("confirm-modal-ok");
+  const backdrop = modal?.querySelector("[data-modal-dismiss]");
+
+  if (!modal || !titleEl || !listEl || !cancelButton || !okButton) {
+    return Promise.resolve(window.confirm(
+      alreadyUsed.join("\n")
+    ));
+  }
+
+  const isSingle = alreadyUsed.length === 1;
+
+  titleEl.textContent = isSingle
+    ? t("usedUrlTitle")
+    : t("usedUrlsTitle", { count: alreadyUsed.length });
+
+  if (leadEl) {
+    leadEl.textContent = isSingle
+      ? t("usedUrlLead")
+      : t("usedUrlsLead");
+  }
+
+  if (questionEl) {
+    questionEl.textContent = isSingle
+      ? t("usedUrlQuestion")
+      : t("usedUrlsQuestion");
+  }
+
+  listEl.innerHTML = "";
+
+  for (const url of alreadyUsed) {
+    const item = document.createElement("li");
+    item.textContent = url;
+    listEl.appendChild(item);
+  }
+
+  cancelButton.textContent = t("cancel");
+  okButton.textContent = t("confirmProcessAgain");
+
+  return new Promise(resolve => {
+    const previousFocus = document.activeElement;
+
+    function close(result) {
+      modal.hidden = true;
+      document.body.classList.remove("modal-open");
+
+      cancelButton.removeEventListener("click", onCancel);
+      okButton.removeEventListener("click", onConfirm);
+      backdrop?.removeEventListener("click", onCancel);
+      document.removeEventListener("keydown", onKeyDown);
+
+      if (previousFocus && typeof previousFocus.focus === "function") {
+        previousFocus.focus();
+      }
+
+      resolve(result);
+    }
+
+    function onCancel() {
+      close(false);
+    }
+
+    function onConfirm() {
+      close(true);
+    }
+
+    function onKeyDown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCancel();
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        onConfirm();
+      }
+    }
+
+    cancelButton.addEventListener("click", onCancel);
+    okButton.addEventListener("click", onConfirm);
+    backdrop?.addEventListener("click", onCancel);
+    document.addEventListener("keydown", onKeyDown);
+
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+    okButton.focus();
+  });
+}
+
+
+/* =========================================================
    SCRAPE
 ========================================================= */
 
@@ -1044,26 +1180,10 @@ scrapeButton.addEventListener(
      * mas permite processá-las novamente.
      */
     if (alreadyUsed.length > 0) {
-      const message =
-        alreadyUsed.length === 1
-          ? (
-              "⚠️ Esta URL já foi processada anteriormente:\n\n" +
-              alreadyUsed[0] +
-              "\n\nDeseja processá-la novamente?"
-            )
-          : (
-              `⚠️ ${alreadyUsed.length} URLs já foram processadas anteriormente:\n\n` +
-              alreadyUsed
-                .map(url => `• ${url}`)
-                .join("\n") +
-              "\n\nDeseja processá-las novamente?"
-            );
-
-      const shouldContinue = window.confirm(message);
+      const shouldContinue = await confirmUsedUrls(alreadyUsed);
 
       if (!shouldContinue) {
-        statusEl.textContent =
-          "Processamento cancelado.";
+        statusEl.textContent = t("processingCancelled");
         return;
       }
     }
