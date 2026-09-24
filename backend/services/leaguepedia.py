@@ -1,8 +1,8 @@
 import json
 import os
 import unicodedata
-
 import requests
+from difflib import SequenceMatcher
 
 
 # ==================================================
@@ -550,3 +550,67 @@ def get_tournament_players(tournament_name):
 if __name__ == "__main__":
     resultado = resolve_player("Robo")
     print(resultado)
+
+# ======================================
+# TESTANDO FUZZY 
+# ======================================
+
+FUZZY_TEST_PLAYERS = {
+    "Robo": "paiN Gaming",
+    "Tutsz": "FURIA",
+    "Tatu": "FURIA",
+    "Guigo": "FURIA",
+    "Ayu": "FURIA",
+    "JoJo": "FURIA",
+}
+
+def fuzzy_match_player(player_name, players, threshold=0.80):
+    """
+    Procura o jogador mais parecido com o nome informado.
+
+    players deve ser um dicionário no formato:
+    {
+        "Robo": "paiN Gaming",
+        "Tutsz": "FURIA",
+        "Tatu": "FURIA",
+    }
+
+    Retorna:
+    {
+        "player": "Robo",
+        "team": "paiN Gaming",
+        "confidence": 0.92
+    }
+
+    ou None caso nenhum resultado atinja o threshold.
+    """
+
+    normalized_input = player_name.strip().lower()
+
+    if not normalized_input:
+        return None
+
+    best_match = None
+    best_score = 0
+
+    for player, team in players.items():
+        normalized_player = player.strip().lower()
+
+        score = SequenceMatcher(
+            None,
+            normalized_input,
+            normalized_player
+        ).ratio()
+
+        if score > best_score:
+            best_score = score
+            best_match = {
+                "player": player,
+                "team": team,
+                "confidence": round(score, 3)
+            }
+
+    if best_match and best_score >= threshold:
+        return best_match
+
+    return None
