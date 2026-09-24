@@ -1005,20 +1005,7 @@ def make_template(res):
 
 @app.route("/api/test-fuzzy/<player_name>")
 def test_fuzzy(player_name):
-    players = {
-        "Robo": "paiN Gaming",
-        "Tutsz": "FURIA",
-        "Tatu": "FURIA",
-        "Guigo": "FURIA",
-        "Ayu": "FURIA",
-        "JoJo": "FURIA",
-    }
-
-    result = fuzzy_match_player(
-        player_name,
-        players
-    )
-
+    result = fuzzy_match_player(player_name)
     return jsonify({
         "query": player_name,
         "result": result
