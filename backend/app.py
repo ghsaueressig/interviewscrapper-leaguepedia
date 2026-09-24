@@ -18,6 +18,7 @@ from services.leaguepedia import (
     get_current_player,
     search_player,
     fuzzy_match_player,
+    fuzzy_match_players,
 )
 from data.content import (
     STOPWORDS,
@@ -1005,10 +1006,18 @@ def make_template(res):
 
 @app.route("/api/test-fuzzy/<player_name>")
 def test_fuzzy(player_name):
-    result = fuzzy_match_player(player_name)
+    best_match = fuzzy_match_player(
+        player_name
+    )
+    candidates = fuzzy_match_players(
+        player_name,
+        threshold=0.60,
+        limit=5
+    )
     return jsonify({
         "query": player_name,
-        "result": result
+        "best_match": best_match,
+        "candidates": candidates
     })
 
 @app.get('/api/health')
