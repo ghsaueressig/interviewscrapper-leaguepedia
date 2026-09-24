@@ -943,3 +943,87 @@ body.modal-open {
     width: 100%;
   }
 }
+
+
+/* =========================================================
+   FUZZY NICKNAME OPTIONS
+========================================================= */
+
+.fuzzy-question {
+  margin: 14px 0 10px;
+
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.fuzzy-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  max-height: 280px;
+  overflow: auto;
+}
+
+.fuzzy-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  margin: 0;
+  padding: 12px;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: var(--surface-soft);
+
+  cursor: pointer;
+}
+
+.fuzzy-option:hover {
+  background: var(--surface-hover);
+}
+
+.fuzzy-option input[type="radio"] {
+  flex-shrink: 0;
+
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.fuzzy-option-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  min-width: 0;
+}
+
+.fuzzy-option-content strong {
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.fuzzy-option-details {
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.fuzzy-option-none .fuzzy-option-content strong {
+  font-weight: 600;
+}
+
+.fuzzy-option:has(input:checked) {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+  box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.18);
+}

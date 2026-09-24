@@ -51,19 +51,19 @@
               aria-label="Language"
             >
               <option value="pt-BR">
-                🇧🇷 Português
+                🇧🇷
               </option>
 
               <option value="en">
-                🇺🇸 English
+                🇺🇸
               </option>
 
               <option value="es">
-                🇪🇸 Español
+                🇪🇸
               </option>
 
               <option value="fr">
-                🇫🇷 Français
+                🇫🇷
               </option>
 
             </select>
@@ -220,6 +220,60 @@ https://youtube.com/..."
           id="confirm-modal-ok"
         >
           Processar novamente
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <div
+    id="fuzzy-modal"
+    class="modal"
+    hidden
+  >
+    <div
+      class="modal-backdrop"
+      data-modal-dismiss
+    ></div>
+
+    <div
+      class="modal-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fuzzy-modal-title"
+    >
+      <h2 id="fuzzy-modal-title"></h2>
+
+      <p
+        id="fuzzy-modal-lead"
+        class="modal-lead"
+      ></p>
+
+      <p
+        id="fuzzy-modal-question"
+        class="fuzzy-question"
+      ></p>
+
+      <div
+        id="fuzzy-modal-options"
+        class="fuzzy-options"
+        role="radiogroup"
+      ></div>
+
+      <div class="modal-actions">
+        <button
+          type="button"
+          id="fuzzy-modal-cancel"
+          class="secondary"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          id="fuzzy-modal-ok"
+        >
+          Confirmar
         </button>
       </div>
     </div>

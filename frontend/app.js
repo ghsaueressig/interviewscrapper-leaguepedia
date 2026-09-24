@@ -168,7 +168,15 @@ https://youtube.com/...`,
     usedUrlQuestion: "Deseja processá-la novamente?",
     usedUrlsQuestion: "Deseja processá-las novamente?",
     confirmProcessAgain: "Processar novamente",
-    processingCancelled: "Processamento cancelado."
+    processingCancelled: "Processamento cancelado.",
+
+    fuzzyTitle: "Possível nickname encontrado",
+    fuzzyLead: "O termo \"{term}\" pode ser um nickname de jogador.",
+    fuzzyQuestion: "Selecione a opção correta:",
+    fuzzyNone: "Nenhum desses",
+    fuzzyConfirm: "Confirmar",
+    fuzzyTeam: "Equipe",
+    fuzzyConfidence: "Confiança"
   },
 
 
@@ -245,7 +253,15 @@ https://youtube.com/...`,
     usedUrlQuestion: "Do you want to process it again?",
     usedUrlsQuestion: "Do you want to process them again?",
     confirmProcessAgain: "Process again",
-    processingCancelled: "Processing cancelled."
+    processingCancelled: "Processing cancelled.",
+
+    fuzzyTitle: "Possible nickname found",
+    fuzzyLead: "The term \"{term}\" may be a player nickname.",
+    fuzzyQuestion: "Select the correct option:",
+    fuzzyNone: "None of these",
+    fuzzyConfirm: "Confirm",
+    fuzzyTeam: "Team",
+    fuzzyConfidence: "Confidence"
   },
 
 
@@ -322,7 +338,15 @@ https://youtube.com/...`,
     usedUrlQuestion: "¿Deseas procesarla de nuevo?",
     usedUrlsQuestion: "¿Deseas procesarlas de nuevo?",
     confirmProcessAgain: "Procesar de nuevo",
-    processingCancelled: "Procesamiento cancelado."
+    processingCancelled: "Procesamiento cancelado.",
+
+    fuzzyTitle: "Posible nickname encontrado",
+    fuzzyLead: "El término \"{term}\" puede ser un nickname de jugador.",
+    fuzzyQuestion: "Selecciona la opción correcta:",
+    fuzzyNone: "Ninguno de estos",
+    fuzzyConfirm: "Confirmar",
+    fuzzyTeam: "Equipo",
+    fuzzyConfidence: "Confianza"
   },
 
 
@@ -399,7 +423,15 @@ https://youtube.com/...`,
     usedUrlQuestion: "Voulez-vous la traiter à nouveau ?",
     usedUrlsQuestion: "Voulez-vous les traiter à nouveau ?",
     confirmProcessAgain: "Traiter à nouveau",
-    processingCancelled: "Traitement annulé."
+    processingCancelled: "Traitement annulé.",
+
+    fuzzyTitle: "Surnom possible trouvé",
+    fuzzyLead: "Le terme « {term} » peut être un surnom de joueur.",
+    fuzzyQuestion: "Sélectionnez la bonne option :",
+    fuzzyNone: "Aucun de ceux-là",
+    fuzzyConfirm: "Confirmer",
+    fuzzyTeam: "Équipe",
+    fuzzyConfidence: "Confiance"
   }
 };
 
@@ -537,6 +569,72 @@ function getAlreadyUsedUrls(urls) {
 
   return urls.filter(
     url => usedUrls.includes(normalizeUrl(url))
+  );
+}
+
+const IGNORED_NICKNAMES_KEY =
+  "leaguepedia-scraper-ignored-nicknames";
+
+const CONFIRMED_ALIASES_KEY =
+  "leaguepedia-scraper-confirmed-aliases";
+
+function getIgnoredNicknames() {
+  try {
+    const ignored = JSON.parse(
+      localStorage.getItem(IGNORED_NICKNAMES_KEY) || "[]"
+    );
+
+    if (!Array.isArray(ignored)) {
+      return [];
+    }
+
+    return [...new Set(
+      ignored
+        .map(nickname => String(nickname).trim().toLowerCase())
+        .filter(Boolean)
+    )];
+  } catch {
+    return [];
+  }
+}
+
+function saveIgnoredNicknames(nicknames) {
+  localStorage.setItem(
+    IGNORED_NICKNAMES_KEY,
+    JSON.stringify([
+      ...new Set(
+        nicknames
+          .map(nickname => String(nickname).trim().toLowerCase())
+          .filter(Boolean)
+      )
+    ])
+  );
+}
+
+function getConfirmedAliases() {
+  try {
+    const aliases = JSON.parse(
+      localStorage.getItem(CONFIRMED_ALIASES_KEY) || "{}"
+    );
+
+    if (
+      !aliases ||
+      typeof aliases !== "object" ||
+      Array.isArray(aliases)
+    ) {
+      return {};
+    }
+
+    return aliases;
+  } catch {
+    return {};
+  }
+}
+
+function saveConfirmedAliases(aliases) {
+  localStorage.setItem(
+    CONFIRMED_ALIASES_KEY,
+    JSON.stringify(aliases || {})
   );
 }
 
@@ -1151,6 +1249,305 @@ function confirmUsedUrls(alreadyUsed) {
 
 
 /* =========================================================
+   FUZZY NICKNAMES
+========================================================= */
+
+const FUZZY_NONE_VALUE = "__none__";
+
+function splitFieldList(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map(item => String(item).trim())
+      .filter(Boolean);
+  }
+
+  if (!value) {
+    return [];
+  }
+
+  return String(value)
+    .split(",")
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+function joinFieldList(values) {
+  return values.join(", ");
+}
+
+function addUniqueFieldValue(currentValue, addition) {
+  const nextValue = String(addition || "").trim();
+
+  if (!nextValue) {
+    return currentValue || "";
+  }
+
+  const values = splitFieldList(currentValue);
+  const alreadyExists = values.some(
+    value => value.toLowerCase() === nextValue.toLowerCase()
+  );
+
+  if (!alreadyExists) {
+    values.push(nextValue);
+  }
+
+  return joinFieldList(values);
+}
+
+function applyPlayerCandidate(item, candidate) {
+  if (!item || !candidate) {
+    return;
+  }
+
+  if (candidate.player) {
+    item.players = addUniqueFieldValue(
+      item.players,
+      candidate.player
+    );
+  }
+
+  if (candidate.team) {
+    item.teams = addUniqueFieldValue(
+      item.teams,
+      candidate.team
+    );
+  }
+
+  item.template = buildTemplate(item);
+}
+
+function formatConfidence(confidence) {
+  const percent = (Number(confidence) || 0) * 100;
+
+  return `${percent.toLocaleString(getLanguage(), {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0
+  })}%`;
+}
+
+function confirmFuzzyCandidate(fuzzyItem) {
+  const modal = document.getElementById("fuzzy-modal");
+  const titleEl = document.getElementById("fuzzy-modal-title");
+  const leadEl = document.getElementById("fuzzy-modal-lead");
+  const questionEl = document.getElementById("fuzzy-modal-question");
+  const optionsEl = document.getElementById("fuzzy-modal-options");
+  const cancelButton = document.getElementById("fuzzy-modal-cancel");
+  const okButton = document.getElementById("fuzzy-modal-ok");
+  const backdrop = modal?.querySelector("[data-modal-dismiss]");
+
+  if (!modal || !optionsEl || !cancelButton || !okButton) {
+    return Promise.resolve({ action: "cancel" });
+  }
+
+  const term = fuzzyItem.text || fuzzyItem.normalized || "";
+  const candidates = Array.isArray(fuzzyItem.candidates)
+    ? fuzzyItem.candidates
+    : [];
+
+  if (titleEl) {
+    titleEl.textContent = t("fuzzyTitle");
+  }
+
+  if (leadEl) {
+    leadEl.textContent = t("fuzzyLead", { term });
+  }
+
+  if (questionEl) {
+    questionEl.textContent = t("fuzzyQuestion");
+  }
+
+  optionsEl.innerHTML = "";
+
+  candidates.forEach((candidate, index) => {
+    const optionId = `fuzzy-option-${index}`;
+    const label = document.createElement("label");
+    label.className = "fuzzy-option";
+    label.setAttribute("for", optionId);
+
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "fuzzy-candidate";
+    radio.id = optionId;
+    radio.value = candidate.player_id || "";
+    radio.checked = index === 0;
+
+    const content = document.createElement("span");
+    content.className = "fuzzy-option-content";
+
+    const name = document.createElement("strong");
+    name.textContent = candidate.player || candidate.player_id || "";
+
+    const details = document.createElement("span");
+    details.className = "fuzzy-option-details";
+    details.textContent =
+      `${t("fuzzyTeam")}: ${candidate.team || "—"} · ${t("fuzzyConfidence")}: ${formatConfidence(candidate.confidence)}`;
+
+    content.appendChild(name);
+    content.appendChild(details);
+    label.appendChild(radio);
+    label.appendChild(content);
+    optionsEl.appendChild(label);
+  });
+
+  const noneLabel = document.createElement("label");
+  noneLabel.className = "fuzzy-option fuzzy-option-none";
+  noneLabel.setAttribute("for", "fuzzy-option-none");
+
+  const noneRadio = document.createElement("input");
+  noneRadio.type = "radio";
+  noneRadio.name = "fuzzy-candidate";
+  noneRadio.id = "fuzzy-option-none";
+  noneRadio.value = FUZZY_NONE_VALUE;
+  noneRadio.checked = candidates.length === 0;
+
+  const noneContent = document.createElement("span");
+  noneContent.className = "fuzzy-option-content";
+
+  const noneName = document.createElement("strong");
+  noneName.textContent = t("fuzzyNone");
+
+  noneContent.appendChild(noneName);
+  noneLabel.appendChild(noneRadio);
+  noneLabel.appendChild(noneContent);
+  optionsEl.appendChild(noneLabel);
+
+  cancelButton.textContent = t("cancel");
+  okButton.textContent = t("fuzzyConfirm");
+
+  return new Promise(resolve => {
+    const previousFocus = document.activeElement;
+
+    function close(result) {
+      modal.hidden = true;
+      document.body.classList.remove("modal-open");
+
+      cancelButton.removeEventListener("click", onCancel);
+      okButton.removeEventListener("click", onConfirm);
+      backdrop?.removeEventListener("click", onCancel);
+      document.removeEventListener("keydown", onKeyDown);
+
+      if (previousFocus && typeof previousFocus.focus === "function") {
+        previousFocus.focus();
+      }
+
+      resolve(result);
+    }
+
+    function onCancel() {
+      close({ action: "cancel" });
+    }
+
+    function onConfirm() {
+      const selected = optionsEl.querySelector(
+        "input[name='fuzzy-candidate']:checked"
+      );
+
+      if (!selected || selected.value === FUZZY_NONE_VALUE) {
+        close({ action: "ignore" });
+        return;
+      }
+
+      const candidate = candidates.find(
+        item => item.player_id === selected.value
+      );
+
+      if (!candidate) {
+        close({ action: "ignore" });
+        return;
+      }
+
+      close({
+        action: "confirm",
+        candidate
+      });
+    }
+
+    function onKeyDown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCancel();
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        onConfirm();
+      }
+    }
+
+    cancelButton.addEventListener("click", onCancel);
+    okButton.addEventListener("click", onConfirm);
+    backdrop?.addEventListener("click", onCancel);
+    document.addEventListener("keydown", onKeyDown);
+
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+    okButton.focus();
+  });
+}
+
+async function resolveFuzzyCandidates(item) {
+  const fuzzyCandidates = Array.isArray(item?.fuzzy_candidates)
+    ? item.fuzzy_candidates
+    : [];
+
+  for (const fuzzyItem of fuzzyCandidates) {
+    const normalized = String(
+      fuzzyItem?.normalized || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    if (!normalized) {
+      continue;
+    }
+
+    const ignoredNicknames = getIgnoredNicknames();
+
+    if (ignoredNicknames.includes(normalized)) {
+      continue;
+    }
+
+    const aliases = getConfirmedAliases();
+    const savedPlayerId = aliases[normalized];
+
+    if (savedPlayerId) {
+      const matchedCandidate = (fuzzyItem.candidates || []).find(
+        candidate => candidate.player_id === savedPlayerId
+      );
+
+      if (matchedCandidate) {
+        applyPlayerCandidate(item, matchedCandidate);
+        continue;
+      }
+
+      delete aliases[normalized];
+      saveConfirmedAliases(aliases);
+    }
+
+    const decision = await confirmFuzzyCandidate(fuzzyItem);
+
+    if (decision.action === "cancel") {
+      continue;
+    }
+
+    if (decision.action === "ignore") {
+      const nextIgnored = getIgnoredNicknames();
+      nextIgnored.push(normalized);
+      saveIgnoredNicknames(nextIgnored);
+      continue;
+    }
+
+    if (decision.action === "confirm" && decision.candidate) {
+      const nextAliases = getConfirmedAliases();
+      nextAliases[normalized] = decision.candidate.player_id;
+      saveConfirmedAliases(nextAliases);
+      applyPlayerCandidate(item, decision.candidate);
+    }
+  }
+}
+
+
+/* =========================================================
    SCRAPE
 ========================================================= */
 
@@ -1255,6 +1652,11 @@ scrapeButton.addEventListener(
           ])
      ]);
    }
+
+      for (const item of successful) {
+        await resolveFuzzyCandidates(item);
+      }
+
       statusEl.textContent =
         t(
           "processed",
