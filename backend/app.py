@@ -926,7 +926,8 @@ def scrape_article(url):
 
         fuzzy_candidates = extract_fuzzy_player_candidates(
             full_text,
-            threshold=0.70
+            threshold=0.70,
+            resolved_players=resolved_players
         )
 
         # ==========================================
