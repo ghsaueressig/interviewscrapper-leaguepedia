@@ -176,7 +176,8 @@ https://youtube.com/...`,
     fuzzyNone: "Nenhum desses",
     fuzzyConfirm: "Confirmar",
     fuzzyTeam: "Equipe",
-    fuzzyConfidence: "Confiança"
+    fuzzyConfidence: "Confiança",
+    fuzzyUseDetected: "Usar o nickname encontrado"
   },
 
 
@@ -261,7 +262,8 @@ https://youtube.com/...`,
     fuzzyNone: "None of these",
     fuzzyConfirm: "Confirm",
     fuzzyTeam: "Team",
-    fuzzyConfidence: "Confidence"
+    fuzzyConfidence: "Confidence",
+    fuzzyUseDetected: "Use detected nickname"
   },
 
 
@@ -346,7 +348,8 @@ https://youtube.com/...`,
     fuzzyNone: "Ninguno de estos",
     fuzzyConfirm: "Confirmar",
     fuzzyTeam: "Equipo",
-    fuzzyConfidence: "Confianza"
+    fuzzyConfidence: "Confianza",
+    fuzzyUseDetected: "Usar el apodo encontrado"
   },
 
 
@@ -431,7 +434,8 @@ https://youtube.com/...`,
     fuzzyNone: "Aucun de ceux-là",
     fuzzyConfirm: "Confirmer",
     fuzzyTeam: "Équipe",
-    fuzzyConfidence: "Confiance"
+    fuzzyConfidence: "Confiance",
+    fuzzyUseDetected: "Utiliser le pseudo détecté"
   }
 };
 
@@ -636,6 +640,90 @@ function saveConfirmedAliases(aliases) {
     CONFIRMED_ALIASES_KEY,
     JSON.stringify(aliases || {})
   );
+}
+
+const CONFIRMED_RAW_NICKNAMES_KEY =
+  "leaguepedia-scraper-confirmed-raw-nicknames";
+
+function getConfirmedRawNicknames() {
+  try {
+    const nicknames = JSON.parse(
+      localStorage.getItem(CONFIRMED_RAW_NICKNAMES_KEY) || "[]"
+    );
+
+    if (!Array.isArray(nicknames)) {
+      return [];
+    }
+
+    return [...new Set(
+      nicknames
+        .map(nickname => String(nickname).trim().toLowerCase())
+        .filter(Boolean)
+    )];
+  } catch {
+    return [];
+  }
+}
+
+function saveConfirmedRawNicknames(nicknames) {
+  localStorage.setItem(
+    CONFIRMED_RAW_NICKNAMES_KEY,
+    JSON.stringify([
+      ...new Set(
+        nicknames
+          .map(nickname => String(nickname).trim().toLowerCase())
+          .filter(Boolean)
+      )
+    ])
+  );
+}
+
+function removeIgnoredNickname(normalized) {
+  saveIgnoredNicknames(
+    getIgnoredNicknames().filter(nickname => nickname !== normalized)
+  );
+}
+
+function removeConfirmedAlias(normalized) {
+  const aliases = getConfirmedAliases();
+
+  if (Object.prototype.hasOwnProperty.call(aliases, normalized)) {
+    delete aliases[normalized];
+    saveConfirmedAliases(aliases);
+  }
+}
+
+function removeConfirmedRawNickname(normalized) {
+  saveConfirmedRawNicknames(
+    getConfirmedRawNicknames().filter(nickname => nickname !== normalized)
+  );
+}
+
+function rememberRawNickname(normalized) {
+  removeIgnoredNickname(normalized);
+  removeConfirmedAlias(normalized);
+
+  const nicknames = getConfirmedRawNicknames();
+  nicknames.push(normalized);
+  saveConfirmedRawNicknames(nicknames);
+}
+
+function rememberAlias(normalized, playerId) {
+  removeIgnoredNickname(normalized);
+  removeConfirmedRawNickname(normalized);
+
+  const aliases = getConfirmedAliases();
+  aliases[normalized] = playerId;
+  saveConfirmedAliases(aliases);
+}
+
+function rememberIgnoredNickname(normalized) {
+  removeConfirmedAlias(normalized);
+  removeConfirmedRawNickname(normalized);
+
+  const ignored = getIgnoredNicknames();
+  ignored.push(normalized);
+  saveIgnoredNicknames(ignored);
 }
 
 function updateUrlCount() {
@@ -1253,6 +1341,7 @@ function confirmUsedUrls(alreadyUsed) {
 ========================================================= */
 
 const FUZZY_NONE_VALUE = "__none__";
+const FUZZY_RAW_VALUE = "__raw__";
 
 function splitFieldList(value) {
   if (Array.isArray(value)) {
@@ -1299,6 +1388,9 @@ function applyPlayerCandidate(item, candidate) {
     return;
   }
 
+  const previousPlayers = item.players || "";
+  const previousTeams = item.teams || "";
+
   if (candidate.player) {
     item.players = addUniqueFieldValue(
       item.players,
@@ -1313,7 +1405,29 @@ function applyPlayerCandidate(item, candidate) {
     );
   }
 
-  item.template = buildTemplate(item);
+  if (
+    item.players !== previousPlayers ||
+    item.teams !== previousTeams
+  ) {
+    item.template = buildTemplate(item);
+  }
+}
+
+function applyRawNickname(item, displayName) {
+  if (!item) {
+    return;
+  }
+
+  const previousPlayers = item.players || "";
+
+  item.players = addUniqueFieldValue(
+    item.players,
+    displayName
+  );
+
+  if (item.players !== previousPlayers) {
+    item.template = buildTemplate(item);
+  }
 }
 
 function formatConfidence(confidence) {
@@ -1358,6 +1472,35 @@ function confirmFuzzyCandidate(fuzzyItem) {
 
   optionsEl.innerHTML = "";
 
+  if (term) {
+    const rawLabel = document.createElement("label");
+    rawLabel.className = "fuzzy-option fuzzy-option-raw";
+    rawLabel.setAttribute("for", "fuzzy-option-raw");
+
+    const rawRadio = document.createElement("input");
+    rawRadio.type = "radio";
+    rawRadio.name = "fuzzy-candidate";
+    rawRadio.id = "fuzzy-option-raw";
+    rawRadio.value = FUZZY_RAW_VALUE;
+    rawRadio.checked = true;
+
+    const rawContent = document.createElement("span");
+    rawContent.className = "fuzzy-option-content";
+
+    const rawName = document.createElement("strong");
+    rawName.textContent = term;
+
+    const rawDetails = document.createElement("span");
+    rawDetails.className = "fuzzy-option-details";
+    rawDetails.textContent = t("fuzzyUseDetected");
+
+    rawContent.appendChild(rawName);
+    rawContent.appendChild(rawDetails);
+    rawLabel.appendChild(rawRadio);
+    rawLabel.appendChild(rawContent);
+    optionsEl.appendChild(rawLabel);
+  }
+
   candidates.forEach((candidate, index) => {
     const optionId = `fuzzy-option-${index}`;
     const label = document.createElement("label");
@@ -1369,7 +1512,7 @@ function confirmFuzzyCandidate(fuzzyItem) {
     radio.name = "fuzzy-candidate";
     radio.id = optionId;
     radio.value = candidate.player_id || "";
-    radio.checked = index === 0;
+    radio.checked = !term && index === 0;
 
     const content = document.createElement("span");
     content.className = "fuzzy-option-content";
@@ -1398,7 +1541,7 @@ function confirmFuzzyCandidate(fuzzyItem) {
   noneRadio.name = "fuzzy-candidate";
   noneRadio.id = "fuzzy-option-none";
   noneRadio.value = FUZZY_NONE_VALUE;
-  noneRadio.checked = candidates.length === 0;
+  noneRadio.checked = !term && candidates.length === 0;
 
   const noneContent = document.createElement("span");
   noneContent.className = "fuzzy-option-content";
@@ -1444,6 +1587,11 @@ function confirmFuzzyCandidate(fuzzyItem) {
 
       if (!selected || selected.value === FUZZY_NONE_VALUE) {
         close({ action: "ignore" });
+        return;
+      }
+
+      if (selected.value === FUZZY_RAW_VALUE) {
+        close({ action: "raw" });
         return;
       }
 
@@ -1524,6 +1672,16 @@ async function resolveFuzzyCandidates(item) {
       saveConfirmedAliases(aliases);
     }
 
+    const rawNicknames = getConfirmedRawNicknames();
+
+    if (rawNicknames.includes(normalized)) {
+      applyRawNickname(
+        item,
+        fuzzyItem.text || fuzzyItem.normalized
+      );
+      continue;
+    }
+
     const decision = await confirmFuzzyCandidate(fuzzyItem);
 
     if (decision.action === "cancel") {
@@ -1531,16 +1689,24 @@ async function resolveFuzzyCandidates(item) {
     }
 
     if (decision.action === "ignore") {
-      const nextIgnored = getIgnoredNicknames();
-      nextIgnored.push(normalized);
-      saveIgnoredNicknames(nextIgnored);
+      rememberIgnoredNickname(normalized);
+      continue;
+    }
+
+    if (decision.action === "raw") {
+      rememberRawNickname(normalized);
+      applyRawNickname(
+        item,
+        fuzzyItem.text || fuzzyItem.normalized
+      );
       continue;
     }
 
     if (decision.action === "confirm" && decision.candidate) {
-      const nextAliases = getConfirmedAliases();
-      nextAliases[normalized] = decision.candidate.player_id;
-      saveConfirmedAliases(nextAliases);
+      rememberAlias(
+        normalized,
+        decision.candidate.player_id
+      );
       applyPlayerCandidate(item, decision.candidate);
     }
   }
