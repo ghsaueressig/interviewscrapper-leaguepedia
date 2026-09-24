@@ -17,6 +17,7 @@ from services.leaguepedia import (
     cache_player,
     get_current_player,
     search_player,
+    fuzzy_match_player,
 )
 from data.content import (
     STOPWORDS,
@@ -1001,6 +1002,27 @@ def make_template(res):
         f"|isvideo={res['isvideo']}\n"
         "}}"
     )
+
+@app.route("/api/test-fuzzy/<player_name>")
+def test_fuzzy(player_name):
+    players = {
+        "Robo": "paiN Gaming",
+        "Tutsz": "FURIA",
+        "Tatu": "FURIA",
+        "Guigo": "FURIA",
+        "Ayu": "FURIA",
+        "JoJo": "FURIA",
+    }
+
+    result = fuzzy_match_player(
+        player_name,
+        players
+    )
+
+    return jsonify({
+        "query": player_name,
+        "result": result
+    })
 
 @app.get('/api/health')
 def health():
