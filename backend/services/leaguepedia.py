@@ -655,21 +655,54 @@ def fuzzy_match_players(player_name, threshold=0.60, limit=3):
 
     return matches[:limit]
 
-def extract_fuzzy_player_candidates(text, threshold=0.70):
+def extract_fuzzy_player_candidates(
+    text,
+    threshold=0.70,
+    resolved_players=None
+):
     """
-    Analisa palavras do texto e procura possíveis nicknames
-    usando fuzzy matching.
+    Analisa o texto e procura possíveis nicknames usando fuzzy matching.
 
-    Retorna apenas termos que:
-    - não sejam jogadores já conhecidos;
-    - tenham tamanho mínimo razoável;
-    - tenham algum candidato fuzzy acima do threshold.
+    Ignora:
+    - jogadores já conhecidos no PLAYER_DATA;
+    - jogadores já resolvidos na matéria;
+    - palavras pouco plausíveis como nickname;
+    - palavras comuns conhecidas.
     """
 
     if not text:
         return []
 
-    # Extrai palavras permitindo letras, números, _ e -
+    if resolved_players is None:
+        resolved_players = {}
+
+    # Palavras comuns que não devem ser tratadas como possíveis nicknames.
+    # Podemos expandir essa lista conforme encontrarmos falsos positivos reais.
+    fuzzy_stopwords = {
+        "inicio",
+        "seis",
+        "importantes",
+        "boas",
+        "esta",
+        "está",
+        "saber",
+        "triste",
+        "claro",
+        "acertos",
+        "erro",
+        "jogo",
+        "feito",
+        "carinho",
+        "skins",
+        "iniciantes",
+    }
+
+    # IDs dos jogadores que já foram identificados normalmente.
+    resolved_ids = {
+        player_id.lower()
+        for player_id in resolved_players.keys()
+    }
+
     words = re.findall(
         r"\b[\w-]+\b",
         text,
@@ -682,19 +715,31 @@ def extract_fuzzy_player_candidates(text, threshold=0.70):
     for word in words:
         normalized = word.lower().strip()
 
-        # Evita processar a mesma palavra várias vezes
+        # Já analisamos essa palavra.
         if normalized in seen:
             continue
 
         seen.add(normalized)
 
-        # Nicknames muito pequenos produzem muitos falsos positivos
+        # Muito curta.
         if len(normalized) < 4:
             continue
 
-        # Já é um jogador conhecido.
-        # Portanto não precisamos de fuzzy.
+        # Já é um nickname conhecido.
         if normalized in PLAYER_DATA:
+            continue
+
+        # Palavra comum conhecida.
+        if normalized in fuzzy_stopwords:
+            continue
+
+        # Palavras escritas normalmente em minúsculas
+        # são muito provavelmente texto comum.
+        if word.islower():
+            continue
+
+        # Números puros.
+        if word.isdigit():
             continue
 
         candidates = fuzzy_match_players(
@@ -702,6 +747,18 @@ def extract_fuzzy_player_candidates(text, threshold=0.70):
             threshold=threshold,
             limit=3
         )
+
+        if not candidates:
+            continue
+
+        # Remove sugestões que apontam para jogadores
+        # já identificados normalmente nesta matéria.
+        candidates = [
+            candidate
+            for candidate in candidates
+            if candidate["player_id"].lower()
+            not in resolved_ids
+        ]
 
         if not candidates:
             continue
