@@ -1819,8 +1819,12 @@ scrapeButton.addEventListener(
      ]);
    }
 
-      for (const item of successful) {
-        await resolveFuzzyCandidates(item);
+      for (const items of Object.values(data.grouped || {})) {
+        for (const item of items) {
+          if (!item.error) {
+            await resolveFuzzyCandidates(item);
+          }
+        }
       }
 
       statusEl.textContent =
