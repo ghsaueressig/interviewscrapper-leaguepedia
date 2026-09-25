@@ -56,6 +56,11 @@ TOURNAMENT_CALENDAR = {
         {
             "name": "CBLOL 2026 Split 1",
             "start": "2026-03-28",
+            "end": "2026-05-03"
+        },
+        {
+            "name": "CBLOL 2026 Split 1 Playoffs",
+            "start": "2026-05-04",
             "end": "2026-06-06"
         },
         {
@@ -71,7 +76,12 @@ TOURNAMENT_CALENDAR = {
         {
             "name": "CBLOL 2026 Split 2",
             "start": "2026-07-25",
-            "end": "2026-10-03"
+            "end": "2026-08-30"
+        },
+        {
+            "name": "CBLOL 2026 Split 2 Playoffs",
+            "start": "2026-08-31",
+            "end": "2026-10-10"
         },
     ]
 }
