@@ -177,7 +177,12 @@ https://youtube.com/...`,
     fuzzyConfirm: "Confirmar",
     fuzzyTeam: "Equipe",
     fuzzyConfidence: "Confiança",
-    fuzzyUseDetected: "Usar o nickname encontrado"
+    fuzzyUseDetected: "Usar o nickname encontrado",
+
+    rememberPlayerAliasTitle: "Memorizar correção de jogador?",
+    rememberPlayerAliasQuestion: "Deseja lembrar esta correção para resultados futuros?",
+    rememberPlayerAliasNo: "Agora não",
+    rememberPlayerAliasYes: "Memorizar"
   },
 
 
@@ -263,7 +268,12 @@ https://youtube.com/...`,
     fuzzyConfirm: "Confirm",
     fuzzyTeam: "Team",
     fuzzyConfidence: "Confidence",
-    fuzzyUseDetected: "Use detected nickname"
+    fuzzyUseDetected: "Use detected nickname",
+
+    rememberPlayerAliasTitle: "Remember player correction?",
+    rememberPlayerAliasQuestion: "Would you like to remember this correction for future results?",
+    rememberPlayerAliasNo: "Not now",
+    rememberPlayerAliasYes: "Remember"
   },
 
 
@@ -349,7 +359,12 @@ https://youtube.com/...`,
     fuzzyConfirm: "Confirmar",
     fuzzyTeam: "Equipo",
     fuzzyConfidence: "Confianza",
-    fuzzyUseDetected: "Usar el apodo encontrado"
+    fuzzyUseDetected: "Usar el apodo encontrado",
+
+    rememberPlayerAliasTitle: "¿Recordar la corrección del jugador?",
+    rememberPlayerAliasQuestion: "¿Quieres recordar esta corrección para futuros resultados?",
+    rememberPlayerAliasNo: "Ahora no",
+    rememberPlayerAliasYes: "Recordar"
   },
 
 
@@ -435,7 +450,12 @@ https://youtube.com/...`,
     fuzzyConfirm: "Confirmer",
     fuzzyTeam: "Équipe",
     fuzzyConfidence: "Confiance",
-    fuzzyUseDetected: "Utiliser le pseudo détecté"
+    fuzzyUseDetected: "Utiliser le pseudo détecté",
+
+    rememberPlayerAliasTitle: "Mémoriser la correction du joueur ?",
+    rememberPlayerAliasQuestion: "Voulez-vous mémoriser cette correction pour les prochains résultats ?",
+    rememberPlayerAliasNo: "Pas maintenant",
+    rememberPlayerAliasYes: "Mémoriser"
   }
 };
 
@@ -581,6 +601,43 @@ const IGNORED_NICKNAMES_KEY =
 
 const CONFIRMED_ALIASES_KEY =
   "leaguepedia-scraper-confirmed-aliases";
+
+const MANUAL_PLAYER_ALIASES_KEY =
+  "leaguepedia-scraper-manual-player-aliases";
+
+function normalizeManualPlayerAlias(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getManualPlayerAliases() {
+  try {
+    const aliases = JSON.parse(
+      localStorage.getItem(MANUAL_PLAYER_ALIASES_KEY) || "{}"
+    );
+
+    if (!aliases || typeof aliases !== "object" || Array.isArray(aliases)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(aliases)
+        .map(([original, corrected]) => [
+          normalizeManualPlayerAlias(original),
+          String(corrected || "").trim()
+        ])
+        .filter(([original, corrected]) => original && corrected)
+    );
+  } catch {
+    return {};
+  }
+}
+
+function saveManualPlayerAliases(aliases) {
+  localStorage.setItem(
+    MANUAL_PLAYER_ALIASES_KEY,
+    JSON.stringify(aliases || {})
+  );
+}
 
 function getIgnoredNicknames() {
   try {
@@ -965,6 +1022,7 @@ function openManualEditor(
     return;
   }
 
+  const originalPlayers = item.players || "";
   const editor = document.createElement("div");
 
   editor.className = "manual-editor";
@@ -1126,7 +1184,11 @@ function openManualEditor(
 
   saveButton.addEventListener(
     "click",
-    () => {
+    async () => {
+      const playerCorrections = detectManualPlayerCorrections(
+        originalPlayers,
+        fields.querySelector("[name='players']").value
+      );
 
       const formValues = new FormData();
 
@@ -1200,6 +1262,17 @@ function openManualEditor(
       editor.remove();
 
       editButton.disabled = false;
+
+      for (const correction of playerCorrections) {
+        const shouldRemember = await confirmManualPlayerAlias(correction);
+
+        if (shouldRemember) {
+          const aliases = getManualPlayerAliases();
+          aliases[normalizeManualPlayerAlias(correction.original)] =
+            correction.corrected.trim();
+          saveManualPlayerAliases(aliases);
+        }
+      }
 
     }
   );
@@ -1364,6 +1437,52 @@ function joinFieldList(values) {
   return values.join(", ");
 }
 
+function detectManualPlayerCorrections(originalValue, correctedValue) {
+  const originalPlayers = splitFieldList(originalValue);
+  const correctedPlayers = splitFieldList(correctedValue);
+
+  if (originalPlayers.length !== correctedPlayers.length) {
+    return [];
+  }
+
+  const hasReorderedPlayer = originalPlayers.some((player, originalIndex) =>
+    correctedPlayers.some((correctedPlayer, correctedIndex) =>
+      originalIndex !== correctedIndex &&
+      normalizeManualPlayerAlias(player) ===
+        normalizeManualPlayerAlias(correctedPlayer)
+    )
+  );
+
+  if (hasReorderedPlayer) {
+    return [];
+  }
+
+  return originalPlayers
+    .map((original, index) => ({
+      original,
+      corrected: correctedPlayers[index]
+    }))
+    .filter(({ original, corrected }) => original !== corrected);
+}
+
+function applyManualPlayerAliases(item) {
+  if (!item) {
+    return;
+  }
+
+  const aliases = getManualPlayerAliases();
+  const previousPlayers = item.players || "";
+  const players = splitFieldList(previousPlayers).map(player =>
+    aliases[normalizeManualPlayerAlias(player)] || player
+  );
+  const nextPlayers = joinFieldList(players);
+
+  if (nextPlayers !== previousPlayers) {
+    item.players = nextPlayers;
+    item.template = buildTemplate(item);
+  }
+}
+
 function addUniqueFieldValue(currentValue, addition) {
   const nextValue = String(addition || "").trim();
 
@@ -1381,6 +1500,82 @@ function addUniqueFieldValue(currentValue, addition) {
   }
 
   return joinFieldList(values);
+}
+
+function confirmManualPlayerAlias(correction) {
+  const modal = document.getElementById("manual-player-alias-modal");
+  const titleEl = document.getElementById("manual-player-alias-title");
+  const questionEl = document.getElementById("manual-player-alias-question");
+  const originalEl = document.getElementById("manual-player-alias-original");
+  const correctedEl = document.getElementById("manual-player-alias-corrected");
+  const cancelButton = document.getElementById("manual-player-alias-cancel");
+  const okButton = document.getElementById("manual-player-alias-ok");
+  const backdrop = modal?.querySelector("[data-modal-dismiss]");
+
+  if (
+    !modal || !titleEl || !questionEl || !originalEl || !correctedEl ||
+    !cancelButton || !okButton
+  ) {
+    return Promise.resolve(window.confirm(
+      `${correction.original} → ${correction.corrected}\n${t("rememberPlayerAliasQuestion")}`
+    ));
+  }
+
+  titleEl.textContent = t("rememberPlayerAliasTitle");
+  questionEl.textContent = t("rememberPlayerAliasQuestion");
+  originalEl.textContent = correction.original;
+  correctedEl.textContent = correction.corrected;
+  cancelButton.textContent = t("rememberPlayerAliasNo");
+  okButton.textContent = t("rememberPlayerAliasYes");
+
+  return new Promise(resolve => {
+    const previousFocus = document.activeElement;
+
+    function close(shouldRemember) {
+      modal.hidden = true;
+      document.body.classList.remove("modal-open");
+
+      cancelButton.removeEventListener("click", onCancel);
+      okButton.removeEventListener("click", onConfirm);
+      backdrop?.removeEventListener("click", onCancel);
+      document.removeEventListener("keydown", onKeyDown);
+
+      if (previousFocus && typeof previousFocus.focus === "function") {
+        previousFocus.focus();
+      }
+
+      resolve(shouldRemember);
+    }
+
+    function onCancel() {
+      close(false);
+    }
+
+    function onConfirm() {
+      close(true);
+    }
+
+    function onKeyDown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCancel();
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        onConfirm();
+      }
+    }
+
+    cancelButton.addEventListener("click", onCancel);
+    okButton.addEventListener("click", onConfirm);
+    backdrop?.addEventListener("click", onCancel);
+    document.addEventListener("keydown", onKeyDown);
+
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+    okButton.focus();
+  });
 }
 
 function applyPlayerCandidate(item, candidate) {
@@ -1649,6 +1844,10 @@ async function resolveFuzzyCandidates(item) {
       continue;
     }
 
+    if (getManualPlayerAliases()[normalizeManualPlayerAlias(normalized)]) {
+      continue;
+    }
+
     const ignoredNicknames = getIgnoredNicknames();
 
     if (ignoredNicknames.includes(normalized)) {
@@ -1822,6 +2021,7 @@ scrapeButton.addEventListener(
       for (const items of Object.values(data.grouped || {})) {
         for (const item of items) {
           if (!item.error) {
+            applyManualPlayerAliases(item);
             await resolveFuzzyCandidates(item);
           }
         }

@@ -279,6 +279,49 @@ https://youtube.com/..."
     </div>
   </div>
 
+  <div
+    id="manual-player-alias-modal"
+    class="modal"
+    hidden
+  >
+    <div
+      class="modal-backdrop"
+      data-modal-dismiss
+    ></div>
+
+    <div
+      class="modal-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="manual-player-alias-title"
+    >
+      <h2 id="manual-player-alias-title"></h2>
+
+      <div class="manual-player-alias-change">
+        <strong id="manual-player-alias-original"></strong>
+        <span aria-hidden="true">↓</span>
+        <strong id="manual-player-alias-corrected"></strong>
+      </div>
+
+      <p
+        id="manual-player-alias-question"
+        class="modal-question"
+      ></p>
+
+      <div class="modal-actions">
+        <button
+          type="button"
+          id="manual-player-alias-cancel"
+          class="secondary"
+        ></button>
+
+        <button
+          type="button"
+          id="manual-player-alias-ok"
+        ></button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 
