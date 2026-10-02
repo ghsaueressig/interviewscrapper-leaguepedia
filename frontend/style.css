@@ -626,6 +626,19 @@ button.secondary:hover:not(:disabled) {
   gap: 5px;
 }
 
+.player-memory-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.player-memory-button {
+  padding: 5px 8px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
 .edit-field label {
   color: var(--text);
 

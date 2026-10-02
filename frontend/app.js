@@ -182,7 +182,16 @@ https://youtube.com/...`,
     rememberPlayerAliasTitle: "Memorizar correção de jogador?",
     rememberPlayerAliasQuestion: "Deseja lembrar esta correção para resultados futuros?",
     rememberPlayerAliasNo: "Agora não",
-    rememberPlayerAliasYes: "Memorizar"
+    rememberPlayerAliasYes: "Memorizar",
+
+    rememberKnownPlayer: "🧠 Memorizar",
+    knownPlayerRemembered: "✓ Memorizado",
+    knownPlayerTitle: "Memorizar jogador?",
+    knownPlayersTitle: "Memorizar jogadores?",
+    knownPlayerQuestion: "Este jogador será reconhecido como um valor validado no futuro.",
+    knownPlayersQuestion: "Estes jogadores serão reconhecidos como valores validados no futuro.",
+    knownPlayerCancel: "Cancelar",
+    knownPlayerConfirm: "Memorizar"
   },
 
 
@@ -273,7 +282,16 @@ https://youtube.com/...`,
     rememberPlayerAliasTitle: "Remember player correction?",
     rememberPlayerAliasQuestion: "Would you like to remember this correction for future results?",
     rememberPlayerAliasNo: "Not now",
-    rememberPlayerAliasYes: "Remember"
+    rememberPlayerAliasYes: "Remember",
+
+    rememberKnownPlayer: "🧠 Remember",
+    knownPlayerRemembered: "✓ Remembered",
+    knownPlayerTitle: "Remember player?",
+    knownPlayersTitle: "Remember players?",
+    knownPlayerQuestion: "This player will be recognized as a validated value in the future.",
+    knownPlayersQuestion: "These players will be recognized as validated values in the future.",
+    knownPlayerCancel: "Cancel",
+    knownPlayerConfirm: "Remember"
   },
 
 
@@ -364,7 +382,16 @@ https://youtube.com/...`,
     rememberPlayerAliasTitle: "¿Recordar la corrección del jugador?",
     rememberPlayerAliasQuestion: "¿Quieres recordar esta corrección para futuros resultados?",
     rememberPlayerAliasNo: "Ahora no",
-    rememberPlayerAliasYes: "Recordar"
+    rememberPlayerAliasYes: "Recordar",
+
+    rememberKnownPlayer: "🧠 Recordar",
+    knownPlayerRemembered: "✓ Recordado",
+    knownPlayerTitle: "¿Recordar al jugador?",
+    knownPlayersTitle: "¿Recordar a los jugadores?",
+    knownPlayerQuestion: "Este jugador se reconocerá como un valor validado en el futuro.",
+    knownPlayersQuestion: "Estos jugadores se reconocerán como valores validados en el futuro.",
+    knownPlayerCancel: "Cancelar",
+    knownPlayerConfirm: "Recordar"
   },
 
 
@@ -455,7 +482,16 @@ https://youtube.com/...`,
     rememberPlayerAliasTitle: "Mémoriser la correction du joueur ?",
     rememberPlayerAliasQuestion: "Voulez-vous mémoriser cette correction pour les prochains résultats ?",
     rememberPlayerAliasNo: "Pas maintenant",
-    rememberPlayerAliasYes: "Mémoriser"
+    rememberPlayerAliasYes: "Mémoriser",
+
+    rememberKnownPlayer: "🧠 Mémoriser",
+    knownPlayerRemembered: "✓ Mémorisé",
+    knownPlayerTitle: "Mémoriser le joueur ?",
+    knownPlayersTitle: "Mémoriser les joueurs ?",
+    knownPlayerQuestion: "Ce joueur sera reconnu comme une valeur validée à l'avenir.",
+    knownPlayersQuestion: "Ces joueurs seront reconnus comme des valeurs validées à l'avenir.",
+    knownPlayerCancel: "Annuler",
+    knownPlayerConfirm: "Mémoriser"
   }
 };
 
@@ -605,8 +641,70 @@ const CONFIRMED_ALIASES_KEY =
 const MANUAL_PLAYER_ALIASES_KEY =
   "leaguepedia-scraper-manual-player-aliases";
 
+const KNOWN_PLAYER_VALUES_KEY =
+  "leaguepedia-scraper-known-player-values";
+
 function normalizeManualPlayerAlias(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function normalizeKnownPlayerValue(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getKnownPlayerValues() {
+  try {
+    const values = JSON.parse(
+      localStorage.getItem(KNOWN_PLAYER_VALUES_KEY) || "[]"
+    );
+
+    if (!Array.isArray(values)) {
+      return [];
+    }
+
+    return [...new Set(
+      values
+        .map(normalizeKnownPlayerValue)
+        .filter(Boolean)
+    )];
+  } catch {
+    return [];
+  }
+}
+
+function saveKnownPlayerValues(values) {
+  const normalizedValues = Array.isArray(values)
+    ? [...new Set(
+        values
+          .map(normalizeKnownPlayerValue)
+          .filter(Boolean)
+      )]
+    : [];
+
+  localStorage.setItem(
+    KNOWN_PLAYER_VALUES_KEY,
+    JSON.stringify(normalizedValues)
+  );
+}
+
+function rememberKnownPlayerValue(value) {
+  const normalized = normalizeKnownPlayerValue(value);
+
+  if (!normalized) {
+    return;
+  }
+
+  saveKnownPlayerValues([
+    ...getKnownPlayerValues(),
+    normalized
+  ]);
+}
+
+function isKnownPlayerValue(value) {
+  const normalized = normalizeKnownPlayerValue(value);
+
+  return Boolean(normalized) &&
+    getKnownPlayerValues().includes(normalized);
 }
 
 function getManualPlayerAliases() {
@@ -962,6 +1060,63 @@ function createInputField(
 
 }
 
+function createPlayerInputField(value) {
+  const group = createInputField(
+    "players",
+    value,
+    "players"
+  );
+  const label = group.querySelector("label");
+  const input = group.querySelector("input");
+  const heading = document.createElement("div");
+  const rememberButton = document.createElement("button");
+
+  heading.className = "player-memory-heading";
+  rememberButton.type = "button";
+  rememberButton.className = "player-memory-button secondary";
+
+  function updateRememberButton() {
+    const players = splitFieldList(input.value);
+    const unknownPlayers = players.filter(
+      player => !isKnownPlayerValue(player)
+    );
+    const allKnown = players.length > 0 && unknownPlayers.length === 0;
+
+    rememberButton.textContent = t(
+      allKnown ? "knownPlayerRemembered" : "rememberKnownPlayer"
+    );
+    rememberButton.disabled = players.length === 0 || allKnown;
+  }
+
+  rememberButton.addEventListener("click", async () => {
+    const unknownPlayers = splitFieldList(input.value)
+      .filter(player => !isKnownPlayerValue(player));
+
+    if (!unknownPlayers.length) {
+      updateRememberButton();
+      return;
+    }
+
+    rememberButton.disabled = true;
+
+    try {
+      if (await confirmKnownPlayerValues(unknownPlayers)) {
+        unknownPlayers.forEach(rememberKnownPlayerValue);
+      }
+    } finally {
+      updateRememberButton();
+    }
+  });
+
+  input.addEventListener("input", updateRememberButton);
+  label.parentNode.insertBefore(heading, label);
+  heading.appendChild(label);
+  heading.appendChild(rememberButton);
+  updateRememberButton();
+
+  return group;
+}
+
 
 function createSelectField(
   labelKey,
@@ -1070,11 +1225,7 @@ function openManualEditor(
   );
 
   fields.appendChild(
-    createInputField(
-      "players",
-      item.players,
-      "players"
-    )
+    createPlayerInputField(item.players)
   );
 
   fields.appendChild(
@@ -1264,6 +1415,7 @@ function openManualEditor(
           aliases[normalizeManualPlayerAlias(correction.original)] =
             correction.corrected.trim();
           saveManualPlayerAliases(aliases);
+          rememberKnownPlayerValue(correction.corrected);
         }
       }
 
@@ -1526,6 +1678,92 @@ function confirmManualPlayerAlias(correction) {
   correctedEl.textContent = correction.corrected;
   cancelButton.textContent = t("rememberPlayerAliasNo");
   okButton.textContent = t("rememberPlayerAliasYes");
+
+  return new Promise(resolve => {
+    const previousFocus = document.activeElement;
+
+    function close(shouldRemember) {
+      modal.hidden = true;
+      document.body.classList.remove("modal-open");
+
+      cancelButton.removeEventListener("click", onCancel);
+      okButton.removeEventListener("click", onConfirm);
+      backdrop?.removeEventListener("click", onCancel);
+      document.removeEventListener("keydown", onKeyDown);
+
+      if (previousFocus && typeof previousFocus.focus === "function") {
+        previousFocus.focus();
+      }
+
+      resolve(shouldRemember);
+    }
+
+    function onCancel() {
+      close(false);
+    }
+
+    function onConfirm() {
+      close(true);
+    }
+
+    function onKeyDown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCancel();
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        onConfirm();
+      }
+    }
+
+    cancelButton.addEventListener("click", onCancel);
+    okButton.addEventListener("click", onConfirm);
+    backdrop?.addEventListener("click", onCancel);
+    document.addEventListener("keydown", onKeyDown);
+
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+    okButton.focus();
+  });
+}
+
+function confirmKnownPlayerValues(players) {
+  const modal = document.getElementById("known-player-values-modal");
+  const titleEl = document.getElementById("known-player-values-title");
+  const listEl = document.getElementById("known-player-values-list");
+  const questionEl = document.getElementById("known-player-values-question");
+  const cancelButton = document.getElementById("known-player-values-cancel");
+  const okButton = document.getElementById("known-player-values-ok");
+  const backdrop = modal?.querySelector("[data-modal-dismiss]");
+
+  if (!modal || !titleEl || !listEl || !questionEl || !cancelButton || !okButton) {
+    const questionKey = players.length === 1
+      ? "knownPlayerQuestion"
+      : "knownPlayersQuestion";
+
+    return Promise.resolve(window.confirm(
+      `${players.join("\n")}\n\n${t(questionKey)}`
+    ));
+  }
+
+  const isSingle = players.length === 1;
+  titleEl.textContent = t(
+    isSingle ? "knownPlayerTitle" : "knownPlayersTitle"
+  );
+  questionEl.textContent = t(
+    isSingle ? "knownPlayerQuestion" : "knownPlayersQuestion"
+  );
+  cancelButton.textContent = t("knownPlayerCancel");
+  okButton.textContent = t("knownPlayerConfirm");
+  listEl.replaceChildren();
+
+  players.forEach(player => {
+    const item = document.createElement("li");
+    item.textContent = player;
+    listEl.appendChild(item);
+  });
 
   return new Promise(resolve => {
     const previousFocus = document.activeElement;
@@ -1844,6 +2082,14 @@ async function resolveFuzzyCandidates(item) {
     }
 
     if (getManualPlayerAliases()[normalizeManualPlayerAlias(normalized)]) {
+      continue;
+    }
+
+    if (isKnownPlayerValue(fuzzyItem.text || fuzzyItem.normalized)) {
+      applyRawNickname(
+        item,
+        fuzzyItem.text || fuzzyItem.normalized
+      );
       continue;
     }
 
