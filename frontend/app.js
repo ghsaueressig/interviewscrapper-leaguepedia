@@ -1022,7 +1022,7 @@ function openManualEditor(
     return;
   }
 
-  const originalPlayers = item.players || "";
+  const originalPlayers = joinFieldList(splitFieldList(item.players));
   const editor = document.createElement("div");
 
   editor.className = "manual-editor";
@@ -1185,11 +1185,6 @@ function openManualEditor(
   saveButton.addEventListener(
     "click",
     async () => {
-      const playerCorrections = detectManualPlayerCorrections(
-        originalPlayers,
-        fields.querySelector("[name='players']").value
-      );
-
       const formValues = new FormData();
 
       fields
@@ -1205,6 +1200,10 @@ function openManualEditor(
 
         });
 
+      const playerCorrections = detectManualPlayerCorrections(
+        originalPlayers,
+        formValues.get("players") || ""
+      );
 
       item.url =
         formValues.get("url") || "";
@@ -1257,12 +1256,6 @@ function openManualEditor(
       infoEl.replaceWith(newInfo);
 
 
-      /* Fecha editor */
-
-      editor.remove();
-
-      editButton.disabled = false;
-
       for (const correction of playerCorrections) {
         const shouldRemember = await confirmManualPlayerAlias(correction);
 
@@ -1273,6 +1266,12 @@ function openManualEditor(
           saveManualPlayerAliases(aliases);
         }
       }
+
+      /* Fecha editor */
+
+      editor.remove();
+
+      editButton.disabled = false;
 
     }
   );
