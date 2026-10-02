@@ -934,6 +934,28 @@ body.modal-open {
   margin-top: 20px;
 }
 
+.manual-player-alias-change {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  margin: 18px 0;
+  padding: 16px;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: var(--surface-soft);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.manual-player-alias-change span {
+  color: var(--text-soft);
+  font-size: 1.25rem;
+}
+
 @media (max-width: 600px) {
   .modal-actions {
     flex-direction: column-reverse;
