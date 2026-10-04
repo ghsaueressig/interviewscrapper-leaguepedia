@@ -2,299 +2,160 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leaguepedia Interview Scraper</title>
-
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
   <main class="container">
 
-    <header>
-
-      <div class="header-top">
-
-        <h1>
-          Leaguepedia Interview Scraper
-        </h1>
-
-        <div class="header-controls">
-
-          <button
-            id="theme-toggle"
-            class="theme-toggle"
-            type="button"
-            aria-label="Alternar para modo escuro"
-          >
-            🌙
-          </button>
-
-
-          <div class="language-selector">
-
-            <label
-              for="language"
-              data-i18n="languageLabel"
-            >
-              Idioma
-            </label>
-
-            <select
-              id="language"
-              aria-label="Language"
-            >
-              <option value="pt-BR">
-                🇧🇷
-              </option>
-
-              <option value="en">
-                🇺🇸
-              </option>
-
-              <option value="es">
-                🇪🇸
-              </option>
-
-              <option value="fr">
-                🇫🇷
-              </option>
-
-            </select>
-
-          </div>
-
-        </div>
-
+    <header class="app-header">
+      <div class="app-brand" aria-label="Leaguepedia Tools">
+        <span>LEAGUEPEDIA</span>
+        <strong data-i18n="appTools">TOOLS</strong>
       </div>
 
-      <p data-i18n="subtitle">
-        Cole os links das matérias/vídeos e gere automaticamente o template
-        <code>ExternalContent/Line</code>.
-      </p>
+      <div class="app-controls">
+        <button
+          id="theme-toggle"
+          class="theme-toggle"
+          type="button"
+          aria-label="Alternar para modo escuro"
+        >
+          ☀️
+        </button>
 
+        <div class="language-selector">
+          <label for="language" data-i18n="languageLabel">Idioma</label>
+          <select id="language" aria-label="Language">
+            <option value="pt-BR">🇧🇷</option>
+            <option value="en">🇺🇸</option>
+            <option value="es">🇪🇸</option>
+            <option value="fr">🇫🇷</option>
+          </select>
+        </div>
+      </div>
     </header>
 
+    <section class="page-intro">
+      <p class="page-eyebrow" data-i18n="heroEyebrow">EXTERNAL CONTENT</p>
+      <h1 class="page-title" data-i18n="heroTitle">Interview Scraper<span class="period">.</span></h1>
+      <p class="page-description" data-i18n="heroDescription">
+        Paste article/video links and automatically generate the ExternalContent/Line template.
+      </p>
+    </section>
 
-    <section class="card">
+    <section class="workflow-indicator" aria-label="Workflow indicator">
+      <div class="workflow-step">
+        <span class="workflow-number">01</span>
+        <span class="workflow-label" data-i18n="workflowProcess">PROCESSAR</span>
+        <span class="workflow-desc" data-i18n="workflowProcessDesc">Adicione os links</span>
+      </div>
+      <div class="workflow-step">
+        <span class="workflow-number">02</span>
+        <span class="workflow-label" data-i18n="workflowReview">REVISAR</span>
+        <span class="workflow-desc" data-i18n="workflowReviewDesc">Valide os resultados</span>
+      </div>
+      <div class="workflow-step">
+        <span class="workflow-number">03</span>
+        <span class="workflow-label" data-i18n="workflowGenerate">GERAR</span>
+        <span class="workflow-desc" data-i18n="workflowGenerateDesc">Crie os templates</span>
+      </div>
+      <div class="workflow-step">
+        <span class="workflow-number">04</span>
+        <span class="workflow-label" data-i18n="workflowFinish">FINALIZAR</span>
+        <span class="workflow-desc" data-i18n="workflowFinishDesc">Use o conteúdo pronto</span>
+      </div>
+    </section>
 
-      <label
-        for="urls"
-        data-i18n="linksLabel"
-      >
-        Links das matérias
-      </label>
+    <div class="main-content">
+      <aside class="processing-panel">
+        <div class="section-header">
+          <h2 class="section-heading"><span class="number">01</span> <span data-i18n="processingHeading">PROCESSAMENTO</span></h2>
+        </div>
 
+        <section class="card processing-form" aria-labelledby="processing-heading">
+          <label for="urls" class="form-label" data-i18n="linksLabel">Links das matérias</label>
 
-      <textarea
-        id="urls"
-        data-i18n-placeholder="urlsPlaceholder"
-        placeholder="Cole um link por linha.
+          <textarea
+            id="urls"
+            data-i18n-placeholder="urlsPlaceholder"
+            placeholder="Cole um link por linha.
 
-Ex.:
+Ex.: 
 https://maisesports.com.br/...
 https://sheepesports.com/...
 https://youtube.com/..."
-        autofocus
-      ></textarea>
+            autofocus
+          ></textarea>
 
+          <div class="url-info">
+            <p class="url-hint" data-i18n="hint">Publicação, torneio, tipo de conteúdo, tradutor e vídeo são detectados automaticamente.</p>
+            <span id="url-count" class="url-count">0 / 10</span>
+          </div>
 
-      <div class="url-info">
+          <p class="limit-warning" id="limit-warning"></p>
 
-        <p
-          class="hint"
-          data-i18n="hint"
-        >
-          Publicação, torneio, tipo de conteúdo, tradutor e vídeo são detectados automaticamente.
-        </p>
+          <div class="actions">
+            <button id="scrape" data-i18n="generateButton">Gerar Templates</button>
+            <button id="clear" class="secondary" data-i18n="clearButton">Limpar</button>
+          </div>
 
+          <p id="status" class="status"></p>
 
-        <span
-          id="url-count"
-          class="url-count"
-        >
-          0 / 10
-        </span>
+          <p class="api-note" data-i18n="apiNote">Para evitar uso excessivo da ferramenta, é possível processar até 10 links por vez. Atualmente exclusivamente para CBLOL.</p>
+        </section>
+      </aside>
 
-      </div>
+      <section class="results-area" aria-labelledby="results-heading">
+        <div class="section-header">
+          <h2 id="results-heading" class="section-heading"><span class="number">02</span> <span data-i18n="resultsHeading">RESULTADOS</span></h2>
+          <span id="results-count" class="section-meta" data-i18n="resultsCountEmpty">0</span>
+        </div>
 
-
-      <p
-        class="limit-warning"
-        id="limit-warning"
-      ></p>
-
-
-      <div class="actions">
-
-        <button
-          id="scrape"
-          data-i18n="generateButton"
-        >
-          Gerar Templates
-        </button>
-
-
-        <button
-          id="clear"
-          class="secondary"
-          data-i18n="clearButton"
-        >
-          Limpar
-        </button>
-
-      </div>
-
-
-      <p
-        id="status"
-        class="status"
-      ></p>
-
-
-      <p
-        class="api-note"
-        data-i18n="apiNote"
-      >
-        Para evitar uso excessivo da ferramenta, é possível processar até 10 links por vez. Atualmente exclusivamente para CBLOL.
-      </p>
-
-    </section>
-
-
-    <section id="results"></section>
+        <div id="results"></div>
+      </section>
+    </div>
 
   </main>
 
+  <div id="confirm-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-modal-dismiss></div>
 
-  <div
-    id="confirm-modal"
-    class="modal"
-    hidden
-  >
-    <div
-      class="modal-backdrop"
-      data-modal-dismiss
-    ></div>
-
-    <div
-      class="modal-dialog"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="confirm-modal-title"
-    >
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
       <h2 id="confirm-modal-title"></h2>
-
-      <p
-        id="confirm-modal-lead"
-        class="modal-lead"
-      ></p>
-
-      <ul
-        id="confirm-modal-list"
-        class="modal-url-list"
-      ></ul>
-
-      <p
-        id="confirm-modal-question"
-        class="modal-question"
-      ></p>
+      <p id="confirm-modal-lead" class="modal-lead"></p>
+      <ul id="confirm-modal-list" class="modal-url-list"></ul>
+      <p id="confirm-modal-question" class="modal-question"></p>
 
       <div class="modal-actions">
-        <button
-          type="button"
-          id="confirm-modal-cancel"
-          class="secondary"
-        >
-          Cancelar
-        </button>
-
-        <button
-          type="button"
-          id="confirm-modal-ok"
-        >
-          Processar novamente
-        </button>
+        <button type="button" id="confirm-modal-cancel" class="secondary">Cancelar</button>
+        <button type="button" id="confirm-modal-ok">Processar novamente</button>
       </div>
     </div>
   </div>
 
+  <div id="fuzzy-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-modal-dismiss></div>
 
-  <div
-    id="fuzzy-modal"
-    class="modal"
-    hidden
-  >
-    <div
-      class="modal-backdrop"
-      data-modal-dismiss
-    ></div>
-
-    <div
-      class="modal-dialog"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="fuzzy-modal-title"
-    >
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="fuzzy-modal-title">
       <h2 id="fuzzy-modal-title"></h2>
-
-      <p
-        id="fuzzy-modal-lead"
-        class="modal-lead"
-      ></p>
-
-      <p
-        id="fuzzy-modal-question"
-        class="fuzzy-question"
-      ></p>
-
-      <div
-        id="fuzzy-modal-options"
-        class="fuzzy-options"
-        role="radiogroup"
-      ></div>
+      <p id="fuzzy-modal-lead" class="modal-lead"></p>
+      <p id="fuzzy-modal-question" class="fuzzy-question"></p>
+      <div id="fuzzy-modal-options" class="fuzzy-options" role="radiogroup"></div>
 
       <div class="modal-actions">
-        <button
-          type="button"
-          id="fuzzy-modal-cancel"
-          class="secondary"
-        >
-          Cancelar
-        </button>
-
-        <button
-          type="button"
-          id="fuzzy-modal-ok"
-        >
-          Confirmar
-        </button>
+        <button type="button" id="fuzzy-modal-cancel" class="secondary">Cancelar</button>
+        <button type="button" id="fuzzy-modal-ok">Confirmar</button>
       </div>
     </div>
   </div>
 
-  <div
-    id="manual-player-alias-modal"
-    class="modal"
-    hidden
-  >
-    <div
-      class="modal-backdrop"
-      data-modal-dismiss
-    ></div>
+  <div id="manual-player-alias-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-modal-dismiss></div>
 
-    <div
-      class="modal-dialog"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="manual-player-alias-title"
-    >
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="manual-player-alias-title">
       <h2 id="manual-player-alias-title"></h2>
 
       <div class="manual-player-alias-change">
@@ -303,65 +164,26 @@ https://youtube.com/..."
         <strong id="manual-player-alias-corrected"></strong>
       </div>
 
-      <p
-        id="manual-player-alias-question"
-        class="modal-question"
-      ></p>
+      <p id="manual-player-alias-question" class="modal-question"></p>
 
       <div class="modal-actions">
-        <button
-          type="button"
-          id="manual-player-alias-cancel"
-          class="secondary"
-        ></button>
-
-        <button
-          type="button"
-          id="manual-player-alias-ok"
-        ></button>
+        <button type="button" id="manual-player-alias-cancel" class="secondary"></button>
+        <button type="button" id="manual-player-alias-ok"></button>
       </div>
     </div>
   </div>
 
-  <div
-    id="known-player-values-modal"
-    class="modal"
-    hidden
-  >
-    <div
-      class="modal-backdrop"
-      data-modal-dismiss
-    ></div>
+  <div id="known-player-values-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-modal-dismiss></div>
 
-    <div
-      class="modal-dialog"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="known-player-values-title"
-    >
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="known-player-values-title">
       <h2 id="known-player-values-title"></h2>
-
-      <ul
-        id="known-player-values-list"
-        class="modal-url-list"
-      ></ul>
-
-      <p
-        id="known-player-values-question"
-        class="modal-question"
-      ></p>
+      <ul id="known-player-values-list" class="modal-url-list"></ul>
+      <p id="known-player-values-question" class="modal-question"></p>
 
       <div class="modal-actions">
-        <button
-          type="button"
-          id="known-player-values-cancel"
-          class="secondary"
-        ></button>
-
-        <button
-          type="button"
-          id="known-player-values-ok"
-        ></button>
+        <button type="button" id="known-player-values-cancel" class="secondary"></button>
+        <button type="button" id="known-player-values-ok"></button>
       </div>
     </div>
   </div>
