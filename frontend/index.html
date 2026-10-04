@@ -21,6 +21,7 @@
           id="theme-toggle"
           class="theme-toggle"
           type="button"
+          hidden
           aria-label="Alternar para modo escuro"
         >
           ☀️
@@ -40,7 +41,7 @@
 
     <section class="page-intro">
       <p class="page-eyebrow" data-i18n="heroEyebrow">EXTERNAL CONTENT</p>
-      <h1 class="page-title" data-i18n="heroTitle">Interview Scraper<span class="period">.</span></h1>
+      <h1 class="page-title" data-i18n="heroTitle">Interview Scraper</h1>
       <p class="page-description" data-i18n="heroDescription">
         Paste article/video links and automatically generate the ExternalContent/Line template.
       </p>
@@ -111,7 +112,13 @@ https://youtube.com/..."
       <section class="results-area" aria-labelledby="results-heading">
         <div class="section-header">
           <h2 id="results-heading" class="section-heading"><span class="number">02</span> <span data-i18n="resultsHeading">RESULTADOS</span></h2>
-          <span id="results-count" class="section-meta" data-i18n="resultsCountEmpty">0</span>
+          <span id="results-count" class="section-meta">0 entrevistas</span>
+        </div>
+
+        <div id="results-empty" class="empty-state">
+          <span class="empty-state-icon" aria-hidden="true"></span>
+          <p class="empty-state-title" data-i18n="resultsEmptyDescription">Nenhuma entrevista processada ainda.</p>
+          <p class="empty-state-message" data-i18n="resultsEmptyHint">Adicione os links no painel ao lado e clique em Gerar Templates.</p>
         </div>
 
         <div id="results"></div>

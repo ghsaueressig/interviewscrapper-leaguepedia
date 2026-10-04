@@ -48,15 +48,13 @@ function updateThemeButton() {
 
 
 function loadTheme() {
-  const savedTheme = localStorage.getItem(
-    "theme"
+  document.body.classList.remove(
+    "light-theme"
   );
 
-  if (savedTheme === "dark") {
-    document.body.classList.add(
-      "dark-theme"
-    );
-  }
+  document.body.classList.add(
+    "dark-theme"
+  );
 
   updateThemeButton();
 }
@@ -208,6 +206,10 @@ https://youtube.com/...`,
     resultsHeading: "RESULTADOS",
     resultsCountEmpty: "0 entrevistas",
     resultsEmptyDescription: "Nenhuma entrevista processada ainda.",
+    resultsCountZero: "{count} entrevistas",
+    resultsCountOne: "{count} entrevista",
+    resultsCountOther: "{count} entrevistas",
+    resultsEmptyHint: "Adicione os links no painel ao lado e clique em Gerar Templates.",
     knownPlayerConfirm: "Memorizar"
   },
 
@@ -325,6 +327,10 @@ https://youtube.com/...`,
     resultsHeading: "RESULTS",
     resultsCountEmpty: "0 interviews",
     resultsEmptyDescription: "No interviews processed yet.",
+    resultsCountZero: "{count} interviews",
+    resultsCountOne: "{count} interview",
+    resultsCountOther: "{count} interviews",
+    resultsEmptyHint: "Add the links in the side panel and click Generate Templates.",
     knownPlayerConfirm: "Remember"
   },
 
@@ -442,6 +448,10 @@ https://youtube.com/...`,
     resultsHeading: "RESULTADOS",
     resultsCountEmpty: "0 entrevistas",
     resultsEmptyDescription: "Todavía no se ha procesado ninguna entrevista.",
+    resultsCountZero: "{count} entrevistas",
+    resultsCountOne: "{count} entrevista",
+    resultsCountOther: "{count} entrevistas",
+    resultsEmptyHint: "Añade los enlaces en el panel de al lado y haz clic en Generar plantillas.",
     knownPlayerConfirm: "Recordar"
   },
 
@@ -559,6 +569,10 @@ https://youtube.com/...`,
     resultsHeading: "RÉSULTATS",
     resultsCountEmpty: "0 entretiens",
     resultsEmptyDescription: "Aucun entretien traité pour le moment.",
+    resultsCountZero: "{count} entretien",
+    resultsCountOne: "{count} entretien",
+    resultsCountOther: "{count} entretiens",
+    resultsEmptyHint: "Ajoutez les liens dans le panneau à côté et cliquez sur Générer les modèles.",
     knownPlayerConfirm: "Mémoriser"
   }
 };
@@ -631,6 +645,7 @@ function applyLanguage() {
   });
 
   updateUrlCount();
+  updateResultsCount(renderedResultCount);
 }
 
 languageSelect.addEventListener(
@@ -647,6 +662,30 @@ languageSelect.addEventListener(
   }
 );
 
+
+
+let renderedResultCount = 0;
+
+function updateResultsCount(count) {
+  renderedResultCount = count;
+
+  const resultsCountEl = document.getElementById("results-count");
+  const emptyEl = document.getElementById("results-empty");
+
+  if (resultsCountEl) {
+    const key = count === 1
+      ? "resultsCountOne"
+      : count === 0
+        ? "resultsCountZero"
+        : "resultsCountOther";
+
+    resultsCountEl.textContent = t(key, { count });
+  }
+
+  if (emptyEl) {
+    emptyEl.hidden = count > 0;
+  }
+}
 
 /* =========================================================
    URL LIMIT
@@ -2279,6 +2318,7 @@ scrapeButton.addEventListener(
           );
 
     resultsEl.innerHTML = "";
+    updateResultsCount(0);
 
     try {
 
@@ -2529,6 +2569,8 @@ scrapeButton.addEventListener(
       }
 
 
+      updateResultsCount(successful.length);
+
       /* Failed URLs */
 
       for (const item of failed) {
@@ -2581,6 +2623,8 @@ clearButton.addEventListener(
     urlsInput.value = "";
 
     resultsEl.innerHTML = "";
+
+    updateResultsCount(0);
 
     statusEl.textContent = "";
 
