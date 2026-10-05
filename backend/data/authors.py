@@ -23,4 +23,8 @@ AUTHOR_MAPPINGS = [
         "matches": ["João Pedro Andrada"],
         "wiki": "[[João Pedro Andrada]]"
     },
+    {
+        "matches": ["Yuna"],
+        "wiki": "[[Yuna Mei]]"
+    },
 ]
