@@ -82,7 +82,7 @@ A URL e o título da matéria são utilizados para encontrar jogadores conhecido
 
 ## Interface
 
-A interface foi pensada para ser simples:
+A interface foi pensada para ser simples, com suporte a tema claro/escuro e seleção de idioma:
 
 1. Cole uma ou mais URLs.
 2. Clique em **Gerar Templates**.
