@@ -1131,6 +1131,28 @@ body.modal-open {
   border-color: var(--border-strong);
 }
 
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.theme-toggle .theme-sun {
+  display: none;
+}
+
+body.light-theme .theme-toggle .theme-moon {
+  display: none;
+}
+
+body.light-theme .theme-toggle .theme-sun {
+  display: block;
+}
+
 .language-selector {
   display: flex;
   align-items: center;

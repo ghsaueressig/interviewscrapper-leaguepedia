@@ -22,41 +22,72 @@ const themeToggle = document.getElementById(
 );
 
 
+function applyTheme(theme) {
+  const nextTheme = theme === "light"
+    ? "light"
+    : "dark";
+
+  document.body.classList.remove(
+    "dark-theme",
+    "light-theme"
+  );
+
+  document.body.classList.add(
+    nextTheme === "light"
+      ? "light-theme"
+      : "dark-theme"
+  );
+
+  localStorage.setItem(
+    "theme",
+    nextTheme
+  );
+
+  updateThemeButton();
+}
+
+
 function updateThemeButton() {
   if (!themeToggle) {
     return;
   }
 
-  const isDark = document.body.classList.contains(
-    "dark-theme"
+  const isLight = document.body.classList.contains(
+    "light-theme"
   );
 
-  if (isDark) {
-    themeToggle.textContent = "☀️";
-    themeToggle.setAttribute(
-      "aria-label",
-      "Alternar para modo claro"
-    );
-  } else {
-    themeToggle.textContent = "🌙";
-    themeToggle.setAttribute(
-      "aria-label",
-      "Alternar para modo escuro"
-    );
-  }
+  const label = t(
+    isLight
+      ? "themeToDark"
+      : "themeToLight"
+  );
+
+  themeToggle.setAttribute(
+    "aria-label",
+    label
+  );
+
+  themeToggle.title = label;
+
+  themeToggle.setAttribute(
+    "aria-pressed",
+    isLight
+      ? "false"
+      : "true"
+  );
 }
 
 
 function loadTheme() {
-  document.body.classList.remove(
-    "light-theme"
+  const savedTheme = localStorage.getItem(
+    "theme"
   );
 
-  document.body.classList.add(
-    "dark-theme"
+  applyTheme(
+    savedTheme === "light"
+      ? "light"
+      : "dark"
   );
-
-  updateThemeButton();
 }
 
 
@@ -64,22 +95,15 @@ if (themeToggle) {
   themeToggle.addEventListener(
     "click",
     () => {
-      document.body.classList.toggle(
-        "dark-theme"
+      const isLight = document.body.classList.contains(
+        "light-theme"
       );
 
-      const isDark = document.body.classList.contains(
-        "dark-theme"
-      );
-
-      localStorage.setItem(
-        "theme",
-        isDark
+      applyTheme(
+        isLight
           ? "dark"
           : "light"
       );
-
-      updateThemeButton();
     }
   );
 }
@@ -210,6 +234,8 @@ https://youtube.com/...`,
     resultsCountOne: "{count} entrevista",
     resultsCountOther: "{count} entrevistas",
     resultsEmptyHint: "Adicione os links no painel ao lado e clique em Gerar Templates.",
+    themeToLight: "Ativar modo claro",
+    themeToDark: "Ativar modo escuro",
     knownPlayerConfirm: "Memorizar"
   },
 
@@ -331,6 +357,8 @@ https://youtube.com/...`,
     resultsCountOne: "{count} interview",
     resultsCountOther: "{count} interviews",
     resultsEmptyHint: "Add the links in the side panel and click Generate Templates.",
+    themeToLight: "Switch to light mode",
+    themeToDark: "Switch to dark mode",
     knownPlayerConfirm: "Remember"
   },
 
@@ -452,6 +480,8 @@ https://youtube.com/...`,
     resultsCountOne: "{count} entrevista",
     resultsCountOther: "{count} entrevistas",
     resultsEmptyHint: "Añade los enlaces en el panel de al lado y haz clic en Generar plantillas.",
+    themeToLight: "Activar modo claro",
+    themeToDark: "Activar modo oscuro",
     knownPlayerConfirm: "Recordar"
   },
 
@@ -573,6 +603,8 @@ https://youtube.com/...`,
     resultsCountOne: "{count} entretien",
     resultsCountOther: "{count} entretiens",
     resultsEmptyHint: "Ajoutez les liens dans le panneau à côté et cliquez sur Générer les modèles.",
+    themeToLight: "Activer le mode clair",
+    themeToDark: "Activer le mode sombre",
     knownPlayerConfirm: "Mémoriser"
   }
 };
@@ -646,6 +678,7 @@ function applyLanguage() {
 
   updateUrlCount();
   updateResultsCount(renderedResultCount);
+  updateThemeButton();
 }
 
 languageSelect.addEventListener(
