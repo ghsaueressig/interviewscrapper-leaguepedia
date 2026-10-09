@@ -1,34 +1,66 @@
 # Leaguepedia Interview Scraper
 
-Ferramenta web para automatizar a criação de templates `{{ExternalContent/Line}}` para a Leaguepedia a partir de links de entrevistas e matérias relacionadas ao cenário de esports.
+Ferramenta web para transformar links de entrevistas, matérias e vídeos em templates `{{ExternalContent/Line}}` para a [Leaguepedia](https://lol.fandom.com/wiki/League_of_Legends_Esports_Wiki), reduzindo o preenchimento manual de informações sobre conteúdos do cenário competitivo de *League of Legends*.
 
-O projeto nasceu para automatizar uma tarefa repetitiva: identificar manualmente informações como jogador, equipe, data, publicação e torneio antes de adicionar uma entrevista à Leaguepedia.
+![Interface do Leaguepedia Interview Scraper em tema escuro](assets/interface.png)
 
-## Como funciona
+> **Escopo atual:** o projeto é voltado ao CBLOL. As informações são identificadas por regras e heurísticas e devem ser revisadas antes de serem publicadas na wiki.
 
-Basta colar uma ou mais URLs na ferramenta:
+## Como usar
+
+1. **Processar:** cole até 10 URLs, uma por linha, e clique em **Gerar Templates**.
+2. **Revisar:** confira as informações extraídas e corrija os campos quando necessário.
+3. **Gerar:** obtenha os templates no formato esperado pela Leaguepedia.
+4. **Finalizar:** copie o resultado revisado para a wiki.
+
+Exemplos de links:
 
 ```text
 https://maisesports.com.br/...
 https://sheepesports.com/...
+https://youtube.com/...
 ```
 
-O scraper processa as páginas e tenta identificar automaticamente:
+## Funcionalidades
 
-- Título
-- Data de publicação
-- Jogador(es)
-- Equipe(s)
-- Autor
-- Publicação
-- Tipo de conteúdo
-- Torneio
-- Tradutor
-- Se o conteúdo é vídeo
+- **Extração de metadados:** identifica, quando disponíveis, título, data, autor, publicação, jogadores, equipes, torneio, tradutor, tipo de conteúdo e indicador de vídeo.
+- **Reconhecimento de jogadores e equipes:** cruza informações da URL e do título com uma base de nomes conhecidos.
+- **Revisão manual:** permite conferir e ajustar informações antes de copiar o template.
+- **Resolução de nomes ambíguos:** oferece confirmação quando uma correspondência aproximada (*fuzzy matching*) precisa de intervenção humana.
+- **Aliases e memória local:** permite confirmar variações de nomes e reutilizar associações conhecidas na interface. Os dados locais do navegador não devem ser tratados como uma base compartilhada entre usuários.
+- **Prevenção de processamento duplicado:** identifica URLs já processadas e solicita confirmação quando aplicável.
+- **Interface multilíngue:** português brasileiro, inglês, espanhol e francês.
+- **Temas:** modo escuro e modo claro.
 
-Depois disso, a ferramenta gera o template:
+A disponibilidade de cada campo depende da página de origem e das informações que o scraper consegue reconhecer.
 
-```text
+## Detecções automáticas
+
+### Publicações e formatos
+
+O reconhecimento de publicação é direcionado principalmente a **Mais Esports** e **Sheep Esports**, com identificação a partir do domínio da URL.
+
+Links dessas publicações são tratados prioritariamente como conteúdo escrito, enquanto links de plataformas como YouTube são identificados como vídeo. Para outros domínios, o sistema pode recorrer aos elementos e metadados da página. Essa distinção ajuda a evitar que vídeos incorporados em matérias alterem incorretamente o tipo do conteúdo principal.
+
+### Torneios
+
+O sistema tenta identificar torneios usando informações da URL, do título, do conteúdo e da data. O foco atual inclui:
+
+- CBLOL Cup
+- CBLOL Split 1
+- CBLOL Split 2
+
+### Jogadores, equipes e aliases
+
+A identificação parte de uma base interna de jogadores e equipes. Nomes encontrados nas matérias podem ser comparados com registros conhecidos, incluindo variações de nickname. Quando uma associação não é suficientemente clara, o fluxo de revisão permite confirmar ou corrigir o resultado.
+
+**Importante:** reconhecimento automático e correspondência aproximada não garantem identidade correta. Casos de nomes iguais, mudanças de equipe e múltiplos entrevistados exigem atenção editorial.
+
+## Template gerado
+
+O formato de saída é o template `ExternalContent/Line`, por exemplo:
+
+```wikitext
 {{ExternalContent/Line
 |url=...
 |title=...
@@ -43,91 +75,29 @@ Depois disso, a ferramenta gera o template:
 }}
 ```
 
-## Detecções automáticas
-
-### Publicação
-
-Atualmente, o projeto possui suporte direcionado para:
-
-- Mais Esports
-- Sheep Esports
-
-A publicação é identificada automaticamente a partir do domínio da URL.
-
-### Conteúdo escrito e vídeo
-
-Como o principal uso da ferramenta é processar matérias escritas:
-
-- URLs de `maisesports.com.br` e `sheepesports.com` são consideradas conteúdo escrito.
-- Plataformas como `youtube.com` são identificadas como vídeo.
-- Outros domínios utilizam uma detecção baseada nos elementos e metadados da página.
-
-Isso evita que embeds presentes em matérias escritas façam uma entrevista ser incorretamente classificada como vídeo.
-
-### Torneio
-
-A ferramenta tenta identificar automaticamente o torneio utilizando informações presentes na URL, no título, no conteúdo e na data de publicação.
-
-O foco atual é o calendário competitivo do CBLOL, incluindo:
-
-- CBLOL Cup
-- CBLOL Split 1
-- CBLOL Split 2
-
-### Jogadores e equipes
-
-A identificação utiliza uma base interna de jogadores e equipes do cenário analisado.
-
-A URL e o título da matéria são utilizados para encontrar jogadores conhecidos e associá-los às respectivas equipes.
-
-## Interface
-
-A interface foi pensada para ser simples, com suporte a tema claro/escuro e seleção de idioma:
-
-1. Cole uma ou mais URLs.
-2. Clique em **Gerar Templates**.
-3. Confira as informações detectadas.
-4. Copie o template gerado.
-
-Antes do template, a ferramenta mostra uma prévia das informações identificadas, permitindo conferir rapidamente possíveis erros de detecção.
-
-## Tecnologias
-
-### Backend
-
-- Python
-- Flask
-- Requests
-- BeautifulSoup
-- Gunicorn
-
-### Frontend
-
-- HTML
-- CSS
-- JavaScript
+Os campos são preenchidos conforme as informações detectadas e revisadas. O exemplo acima é ilustrativo.
 
 ## Arquitetura
 
+O frontend estático é publicado no **GitHub Pages** e se comunica com uma API **Flask**, que pode ser hospedada no **Render**. O backend utiliza **Requests** e **BeautifulSoup** para obter e interpretar informações das páginas de origem.
+
 ```text
-Usuário
-   ↓
-GitHub Pages
-   ↓
-Frontend HTML/CSS/JavaScript
-   ↓
-API Flask
-   ↓
-Render
-   ↓
-Requests + BeautifulSoup
-   ↓
-Site da publicação
-   ↓
-Informações extraídas
-   ↓
-Template da Leaguepedia
+Navegador
+  └── Frontend (HTML, CSS, JavaScript) — GitHub Pages
+        └── API Flask — Render
+              └── Requests + BeautifulSoup
+                    └── Página de origem
+              └── Dados extraídos
+        └── Revisão e geração do template
 ```
+
+### Tecnologias
+
+| Camada | Tecnologias |
+| --- | --- |
+| Frontend | HTML, CSS, JavaScript |
+| Backend | Python, Flask, Requests, BeautifulSoup, Gunicorn |
+| Hospedagem | GitHub Pages (frontend), Render (backend) |
 
 ## Estrutura do projeto
 
@@ -136,141 +106,101 @@ interviewscrapper-leaguepedia/
 ├── .github/
 │   └── workflows/
 │       └── deploy-pages.yml
-│
 ├── backend/
 │   ├── app.py
-│   ├── requirements.txt
-│   └── render.yaml
-│
+│   └── requirements.txt
 ├── frontend/
 │   ├── index.html
 │   ├── app.js
-│   └── style.css
-│
+│   ├── style.css
+│   └── favicon.svg
+├── assets/
+│   └── interface.png
 ├── README.md
 └── render.yaml
 ```
 
-## Rodando localmente
+A pasta `assets/` é usada apenas para as imagens da documentação. A estrutura acima destaca os principais arquivos, não necessariamente todos os arquivos auxiliares do repositório.
+
+## Executar localmente
 
 ### Backend
 
-Requer Python 3.10 ou superior.
+Requer **Python 3.10 ou superior**.
 
 ```bash
 cd backend
 python -m venv .venv
 ```
 
-Ative o ambiente virtual.
+Ative o ambiente virtual:
 
-Windows:
+**Windows (PowerShell):**
 
-```bash
-.venv\Scripts\activate
+```powershell
+.venv\Scripts\Activate.ps1
 ```
 
-Linux/macOS:
+**Windows (Prompt de Comando):**
+
+```bat
+.venv\Scripts\activate.bat
+```
+
+**Linux/macOS:**
 
 ```bash
 source .venv/bin/activate
 ```
 
-Instale as dependências:
+Instale as dependências e inicie a API:
 
 ```bash
 pip install -r requirements.txt
-```
-
-Execute:
-
-```bash
 python app.py
 ```
 
-A API ficará disponível em:
+Endereço local esperado: `http://localhost:5000`.
 
-```text
-http://localhost:5000
-```
-
-Para verificar se está funcionando:
-
-```text
-http://localhost:5000/api/health
-```
-
-## Deploy
-
-O projeto utiliza duas partes independentes:
+Para conferir a disponibilidade da API, acesse `http://localhost:5000/api/health`.
 
 ### Frontend
 
-O frontend é publicado através do GitHub Pages.
+Os arquivos estão em `frontend/`. Para testar a interface localmente, abra `index.html` no navegador ou sirva a pasta por um servidor estático. **A configuração da URL da API no `app.js` deve apontar para o backend que será utilizado no teste**; abrir o HTML sozinho não garante que o processamento de URLs funcione.
 
-O workflow em:
+## Deploy
 
-```text
-.github/workflows/deploy-pages.yml
-```
+### GitHub Pages
 
-publica os arquivos da pasta:
+O workflow `.github/workflows/deploy-pages.yml` publica os arquivos selecionados de `frontend/`, incluindo o favicon. Como a cópia para `_site/` é explícita, novos arquivos estáticos precisam ser adicionados ao workflow para aparecerem no site publicado.
 
-```text
-frontend/
-```
+### Render
 
-### Backend
+O backend pode ser hospedado no Render, com deploys vinculados ao repositório conforme a configuração do serviço. O endereço da API utilizado pela interface é definido no frontend.
 
-O backend Python pode ser hospedado no Render.
+## Limitações e revisão editorial
 
-Após cada atualização no repositório conectado, o serviço pode fazer um novo deploy automaticamente.
+A ferramenta não substitui a verificação humana. É especialmente importante revisar resultados quando houver:
 
-A URL da API está configurada diretamente no frontend, então o usuário não precisa informar manualmente o endereço do backend.
+- jogadores ausentes da base interna ou nicknames semelhantes;
+- múltiplos entrevistados ou equipes citadas na mesma matéria;
+- mudanças recentes de equipe;
+- publicações e redes sociais fora dos domínios prioritários;
+- matérias fora do período esperado de um torneio;
+- conteúdo misto, com texto e vídeo incorporado;
+- páginas inacessíveis, modificadas ou com metadados incompletos.
 
-## Limitações
+A memória local de aliases também pode variar entre navegadores e dispositivos. Não há garantia de sincronização entre usuários.
 
-O projeto utiliza regras e heurísticas para identificar algumas informações automaticamente.
+## Possíveis evoluções
 
-Por isso, é recomendado conferir os dados detectados antes de adicionar o template à Leaguepedia, especialmente em casos como:
+Estas são **ideias de desenvolvimento**, não funcionalidades anunciadas como concluídas:
 
-- jogadores não presentes na base interna;
-- matérias com múltiplas pessoas;
-- publicações fora dos sites atualmente suportados;
-- conteúdo publicado fora do período regular de um torneio;
-- posts de redes sociais;
-- conteúdo cujo formato seja ambíguo.
+- ampliar o reconhecimento para outras publicações e competições;
+- aprimorar a identificação de jogadores e equipes em situações ambíguas;
+- ampliar os recursos de memória e revisão de metadados;
+- adicionar testes automatizados para diferentes formatos de publicação.
 
 ## Objetivo
 
-O objetivo do projeto não é substituir completamente a revisão humana, mas reduzir o trabalho repetitivo envolvido na adição de entrevistas e conteúdos externos à Leaguepedia.
-
-Com isso, o fluxo passa de:
-
-```text
-Abrir matéria
-↓
-Ler e identificar informações
-↓
-Descobrir jogador
-↓
-Descobrir equipe
-↓
-Descobrir data
-↓
-Selecionar torneio
-↓
-Formatar template manualmente
-```
-
-para:
-
-```text
-Colar URL
-↓
-Gerar template
-↓
-Conferir informações
-↓
-Copiar para a Leaguepedia
-```
+Reduzir o trabalho repetitivo na catalogação de entrevistas e conteúdos externos da Leaguepedia, preservando a revisão editorial antes da publicação.
