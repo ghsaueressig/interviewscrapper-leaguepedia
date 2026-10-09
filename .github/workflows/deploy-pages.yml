@@ -36,6 +36,7 @@ jobs:
           cp frontend/index.html _site/
           cp frontend/app.js _site/
           cp frontend/style.css _site/
+          cp frontend/favicon.svg _site/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
