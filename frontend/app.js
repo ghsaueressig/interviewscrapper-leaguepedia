@@ -1070,12 +1070,17 @@ urlsInput.addEventListener(
    TEMPLATE
 ========================================================= */
 
+function escapeMediaWikiTitle(title) {
+  return String(title || "").replace(/\|/g, "{{!}}");
+}
+
+
 function buildTemplate(item) {
 
   return (
     "{{ExternalContent/Line\n" +
     `|url=${item.url || ""}\n` +
-    `|title=${item.title || ""}\n` +
+    `|title=${escapeMediaWikiTitle(item.title)}\n` +
     `|players=${item.players || ""}\n` +
     `|teams=${item.teams || ""}\n` +
     `|tournament=${item.tournament || ""}\n` +

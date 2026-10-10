@@ -191,6 +191,142 @@ def detect_series(title, description="", tags=None):
     return ""
 
 
+
+SERIES_INTERVIEW_NAMES = {
+    "Na Fogueirinha",
+    "Tropas Liberadas",
+}
+
+
+def escape_mediawiki_title(title):
+    return str(title or "").replace("|", "{{!}}")
+
+
+def split_participant_names(value):
+    cleaned = (value or "").split("|")[0]
+    cleaned = re.sub(
+        r"\s+(?:e|and)\s+",
+        ", ",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+
+    names = []
+
+    for part in cleaned.split(","):
+        name = part.strip(" .|-–—")
+        name = re.split(
+            r"\s+(?:na|on|no|em|para|for)\b",
+            name,
+            maxsplit=1,
+            flags=re.IGNORECASE,
+        )[0].strip()
+
+        if name and len(name) >= 2 and not name.isdigit():
+            names.append(name)
+
+    return names
+
+
+def resolve_named_participant(name):
+    player_key = normalize_text(name)
+
+    if player_key in PLAYER_DATA:
+        player_data = PLAYER_DATA[player_key]
+        return {
+            "wiki": player_data.get("wiki", ""),
+            "team": player_data.get("team", ""),
+            "role": player_data.get("role", ""),
+        }
+
+    player = get_cached_player(name)
+
+    if player:
+        return player
+
+    return resolve_player(name)
+
+
+def extract_explicit_participant_names(title, description=""):
+    names = []
+    title = title or ""
+
+    for match in re.finditer(
+        r"\b(?:com|with)\s+(.+)$",
+        title,
+        re.IGNORECASE,
+    ):
+        names.extend(split_participant_names(match.group(1)))
+
+    for match in re.finditer(
+        r"\b([A-Za-zÀ-ÿ0-9][\w.-]{1,})\s+(?:na|on)\s+(?:fogueirinha|bygorninha)\b",
+        title,
+        re.IGNORECASE,
+    ):
+        names.append(match.group(1))
+
+    for match in re.finditer(
+        r"\b(?:do|de|da)\s+([A-Z][\w.-]{1,})",
+        title,
+    ):
+        names.append(match.group(1))
+
+    description_patterns = [
+        r"convidados?(?:\s+da\s+vez)?\s+(?:são|sao|serao|serão|is|are)\s+([^\.\n]+)",
+        r"se\s+juntam\s+a\s+([^\.\n]+)",
+        r"entrevista\s+com\s+([^,\.\n]+)",
+        r"em\s+entrevista\s+(?:ao|para|a)\s+[^,]{0,40},\s*([^,\.\n]+)",
+    ]
+
+    for pattern in description_patterns:
+        for match in re.finditer(
+            pattern,
+            description or "",
+            re.IGNORECASE,
+        ):
+            names.extend(split_participant_names(match.group(1)))
+
+    unique = []
+    seen = set()
+
+    for name in names:
+        key = normalize_text(name)
+
+        if not key or key in seen:
+            continue
+
+        seen.add(key)
+        unique.append(name)
+
+    return unique
+
+
+def resolve_series_participants(title, description=""):
+    resolved = []
+    seen_wiki = set()
+
+    for name in extract_explicit_participant_names(title, description):
+        player = resolve_named_participant(name)
+
+        if not player:
+            continue
+
+        wiki_name = player.get("wiki", "")
+
+        if not wiki_name:
+            continue
+
+        key = normalize_text(wiki_name)
+
+        if key in seen_wiki:
+            continue
+
+        seen_wiki.add(key)
+        resolved.append(player)
+
+    return resolved
+
+
 def detect_type(title, content_text):
     title_n = normalize_text(title)
     content_n = normalize_text(content_text)
@@ -607,14 +743,43 @@ def scrape_youtube(url):
             description
         )
 
+        series = detect_series(
+            title,
+            description,
+            tags
+        )
+
+        if series in SERIES_INTERVIEW_NAMES:
+            content_type = "Interview"
+
         found_players = []
         found_teams = set()
+
+        # ==================================================
+        # SÉRIES / QUADROS
+        # Participantes explícitos no título.
+        # Descrição só quando identifica convidados.
+        # ==================================================
+
+        if series in SERIES_INTERVIEW_NAMES:
+            for participant in resolve_series_participants(
+                title,
+                description
+            ):
+                wiki_name = participant.get("wiki", "")
+                team_name = participant.get("team", "")
+
+                if wiki_name:
+                    found_players.append(wiki_name)
+
+                if team_name:
+                    found_teams.add(team_name)
 
         # ==================================================
         # INTERVIEW
         # ==================================================
 
-        if content_type == "Interview":
+        elif content_type == "Interview":
 
             # Primeiro tenta identificar explicitamente
             # quem é o entrevistado.
@@ -708,12 +873,6 @@ def scrape_youtube(url):
             url
         )
 
-        series = detect_series(
-            title,
-            description,
-            tags
-        )
-
         translator = detect_translator(
             description
         )
@@ -726,10 +885,7 @@ def scrape_youtube(url):
         return {
             'url': url,
 
-            'title': title.replace(
-                '|',
-                '{{!}}'
-            ),
+            'title': title,
 
             'players': ", ".join(
                 found_players
@@ -1036,7 +1192,7 @@ def scrape_article(url):
 
         return {
             'url': url,
-            'title': title_clean,
+            'title': title,
             'players': ", ".join(
                 sorted(set(found_players))
             ),
@@ -1079,7 +1235,7 @@ def make_template(res):
     return (
         "{{ExternalContent/Line\n"
         f"|url={res['url']}\n"
-        f"|title={res['title']}\n"
+        f"|title={escape_mediawiki_title(res.get('title', ''))}\n"
         f"|players={res['players']}\n"
         f"|teams={res['teams']}\n"
         f"|tournament={res['tournament']}\n"
