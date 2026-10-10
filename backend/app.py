@@ -140,6 +140,57 @@ def detect_tournament(date_published, title, content_text, url):
 
     return ''
 
+
+SERIES_PATTERNS = [
+    {
+        "name": "Na Fogueirinha",
+        "patterns": [
+            r"\bna\s+fogueirinha\b",
+            r"\bfogueirinha\b",
+            r"\bna\s+bygorninha\b",
+            r"\bbygorninha\b",
+        ],
+    },
+    {
+        "name": "Tropas Liberadas",
+        "patterns": [
+            r"\btropas\s+liberadas\b",
+            r"\btroops\s+released\b",
+            r"\btroopsreleased\b",
+        ],
+    },
+]
+
+
+def detect_series(title, description="", tags=None):
+    """Detecta quadros editoriais por nome, sem inferir por pessoa."""
+    tag_text = ""
+
+    if isinstance(tags, (list, tuple)):
+        tag_text = " ".join(str(tag) for tag in tags if tag)
+    elif tags:
+        tag_text = str(tags)
+
+    sources = [
+        title or "",
+        description or "",
+        tag_text,
+    ]
+
+    for source in sources:
+        normalized = normalize_text(source)
+
+        if not normalized:
+            continue
+
+        for series in SERIES_PATTERNS:
+            for pattern in series["patterns"]:
+                if re.search(pattern, normalized):
+                    return series["name"]
+
+    return ""
+
+
 def detect_type(title, content_text):
     title_n = normalize_text(title)
     content_n = normalize_text(content_text)
@@ -657,6 +708,12 @@ def scrape_youtube(url):
             url
         )
 
+        series = detect_series(
+            title,
+            description,
+            tags
+        )
+
         translator = detect_translator(
             description
         )
@@ -696,6 +753,8 @@ def scrape_youtube(url):
             'publication': 'YouTube',
 
             'tournament': tournament,
+
+            'series': series,
 
             'type': content_type,
 
@@ -989,6 +1048,7 @@ def scrape_article(url):
                 '%Y-%m-%d'
             ),
             'tournament': tournament,
+            'series': '',
             'publication': publication,
             'type': content_type,
             'translator': translator,
@@ -1023,6 +1083,7 @@ def make_template(res):
         f"|players={res['players']}\n"
         f"|teams={res['teams']}\n"
         f"|tournament={res['tournament']}\n"
+        f"|series={res.get('series', '')}\n"
         f"|publication={res['publication']}\n"
         f"|author={res['author']}\n"
         f"|translator={res['translator']}\n"

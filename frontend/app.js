@@ -136,6 +136,7 @@ https://youtube.com/...`,
     publication: "Publicação",
     type: "Tipo",
     tournament: "Torneio",
+    series: "Série / Quadro",
     players: "Jogador(es)",
     teams: "Equipe(s)",
     date: "Data",
@@ -259,6 +260,7 @@ https://youtube.com/...`,
     publication: "Publication",
     type: "Type",
     tournament: "Tournament",
+    series: "Series / Show",
     players: "Player(s)",
     teams: "Team(s)",
     date: "Date",
@@ -382,6 +384,7 @@ https://youtube.com/...`,
     publication: "Publicación",
     type: "Tipo",
     tournament: "Torneo",
+    series: "Serie / Programa",
     players: "Jugador(es)",
     teams: "Equipo(s)",
     date: "Fecha",
@@ -505,6 +508,7 @@ https://youtube.com/...`,
     publication: "Publication",
     type: "Type",
     tournament: "Tournoi",
+    series: "Série / Émission",
     players: "Joueur(s)",
     teams: "Équipe(s)",
     date: "Date",
@@ -1075,6 +1079,7 @@ function buildTemplate(item) {
     `|players=${item.players || ""}\n` +
     `|teams=${item.teams || ""}\n` +
     `|tournament=${item.tournament || ""}\n` +
+    `|series=${item.series || ""}\n` +
     `|publication=${item.publication || ""}\n` +
     `|author=${item.author || ""}\n` +
     `|translator=${item.translator || ""}\n` +
@@ -1133,16 +1138,24 @@ function createDetectedInfo(item) {
     ]
   ];
 
-   for (const [labelKey, value] of values) {
-  const span = document.createElement("span");
-  const strong = document.createElement("strong");
-  strong.textContent = `${t(labelKey)}: `;
-  span.appendChild(strong);
-  span.appendChild(
-    document.createTextNode(value)
-  );
-  info.appendChild(span);
-}
+  if (item.series) {
+    values.splice(3, 0, [
+      "series",
+      item.series
+    ]);
+  }
+
+  for (const [labelKey, value] of values) {
+    const span = document.createElement("span");
+    const strong = document.createElement("strong");
+    strong.textContent = `${t(labelKey)}: `;
+    span.appendChild(strong);
+    span.appendChild(
+      document.createTextNode(value)
+    );
+    info.appendChild(span);
+  }
+
   return info;
 }
 
@@ -1383,6 +1396,14 @@ function openManualEditor(
 
   fields.appendChild(
     createInputField(
+      "series",
+      item.series,
+      "series"
+    )
+  );
+
+  fields.appendChild(
+    createInputField(
       "publication",
       item.publication,
       "publication"
@@ -1507,6 +1528,9 @@ function openManualEditor(
 
       item.tournament =
         formValues.get("tournament") || "";
+
+      item.series =
+        formValues.get("series") || "";
 
       item.publication =
         formValues.get("publication") || "";
