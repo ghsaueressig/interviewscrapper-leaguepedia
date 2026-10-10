@@ -234,6 +234,48 @@ https://youtube.com/...`,
     resultsEmptyHint: "Adicione os links no painel ao lado e clique em Gerar Templates.",
     themeToLight: "Ativar modo claro",
     themeToDark: "Ativar modo escuro",
+
+    memoryPanelTitle: "Memória do Scraper",
+    memoryPanelSubtitle: "Jogadores e aliases salvos neste navegador.",
+    memoryExpand: "Expandir",
+    memoryCollapse: "Recolher",
+    memoryPlayersCount: "Jogadores",
+    memoryAliasesCount: "Aliases",
+    memoryIgnoredCount: "Ignorados",
+    memoryCategoryLabel: "Categoria",
+    memoryCategoryPlayers: "Jogadores conhecidos",
+    memoryCategoryManual: "Aliases manuais",
+    memoryCategoryConfirmed: "Aliases confirmados",
+    memoryCategoryRaw: "Nicknames confirmados",
+    memoryCategoryIgnored: "Nicknames ignorados",
+    memorySearchLabel: "Pesquisar registros",
+    memorySearchPlaceholder: "Digite um nome ou alias...",
+    memoryExport: "Baixar backup JSON",
+    memoryImport: "Importar backup",
+    memoryPrivacy: "Os backups são processados neste navegador. Importar não substitui automaticamente os dados existentes.",
+    memoryImportTitle: "Revisar importação",
+    memoryImportDescription: "Confira os dados antes de mesclar com a memória local.",
+    memoryImportCancel: "Cancelar",
+    memoryImportConfirm: "Mesclar dados",
+    memoryEmpty: "Nenhum registro nesta categoria.",
+    memoryNoResults: "Nenhum registro encontrado.",
+    memoryExported: "Backup baixado.",
+    memoryImportInvalid: "Arquivo inválido. A memória local não foi alterada.",
+    memoryImportWrongApp: "Este arquivo não é um backup do Interview Scraper.",
+    memoryImportSchema: "Versão de esquema não suportada.",
+    memoryImportTooLarge: "O arquivo passa de 2 MB.",
+    memoryImportFailed: "A importação falhou. A memória local foi restaurada.",
+    memoryImportSuccess: "Memória mesclada.",
+    memoryNew: "Novos",
+    memoryDuplicate: "Duplicados",
+    memoryConflicts: "Conflitos",
+    memoryInconsistencies: "Inconsistências",
+    memoryKeepLocal: "Manter valor local",
+    memoryUseImported: "Usar valor importado",
+    memoryLocalValue: "Local",
+    memoryImportedValue: "Importado",
+    memoryConflictLabel: "Conflito de alias",
+    memoryInconsistencyNote: "Nicknames confirmados e ignorados se sobrepõem. A decisão local foi preservada.",
     knownPlayerConfirm: "Memorizar"
   },
 
@@ -358,6 +400,48 @@ https://youtube.com/...`,
     resultsEmptyHint: "Add the links in the side panel and click Generate Templates.",
     themeToLight: "Switch to light mode",
     themeToDark: "Switch to dark mode",
+
+    memoryPanelTitle: "Scraper memory",
+    memoryPanelSubtitle: "Players and aliases saved in this browser.",
+    memoryExpand: "Expand",
+    memoryCollapse: "Collapse",
+    memoryPlayersCount: "Players",
+    memoryAliasesCount: "Aliases",
+    memoryIgnoredCount: "Ignored",
+    memoryCategoryLabel: "Category",
+    memoryCategoryPlayers: "Known players",
+    memoryCategoryManual: "Manual aliases",
+    memoryCategoryConfirmed: "Confirmed aliases",
+    memoryCategoryRaw: "Confirmed nicknames",
+    memoryCategoryIgnored: "Ignored nicknames",
+    memorySearchLabel: "Search records",
+    memorySearchPlaceholder: "Type a name or alias...",
+    memoryExport: "Download JSON backup",
+    memoryImport: "Import backup",
+    memoryPrivacy: "Backups are processed in this browser. Importing does not automatically replace existing data.",
+    memoryImportTitle: "Review import",
+    memoryImportDescription: "Check the data before merging it with local memory.",
+    memoryImportCancel: "Cancel",
+    memoryImportConfirm: "Merge data",
+    memoryEmpty: "No records in this category.",
+    memoryNoResults: "No records found.",
+    memoryExported: "Backup downloaded.",
+    memoryImportInvalid: "Invalid file. Local memory was not changed.",
+    memoryImportWrongApp: "This file is not an Interview Scraper backup.",
+    memoryImportSchema: "Unsupported schema version.",
+    memoryImportTooLarge: "The file is larger than 2 MB.",
+    memoryImportFailed: "Import failed. Local memory was restored.",
+    memoryImportSuccess: "Memory merged.",
+    memoryNew: "New",
+    memoryDuplicate: "Duplicates",
+    memoryConflicts: "Conflicts",
+    memoryInconsistencies: "Inconsistencies",
+    memoryKeepLocal: "Keep local value",
+    memoryUseImported: "Use imported value",
+    memoryLocalValue: "Local",
+    memoryImportedValue: "Imported",
+    memoryConflictLabel: "Alias conflict",
+    memoryInconsistencyNote: "Confirmed and ignored nicknames overlap. The local decision was preserved.",
     knownPlayerConfirm: "Remember"
   },
 
@@ -482,6 +566,48 @@ https://youtube.com/...`,
     resultsEmptyHint: "Añade los enlaces en el panel de al lado y haz clic en Generar plantillas.",
     themeToLight: "Activar modo claro",
     themeToDark: "Activar modo oscuro",
+
+    memoryPanelTitle: "Memoria del scraper",
+    memoryPanelSubtitle: "Jugadores y alias guardados en este navegador.",
+    memoryExpand: "Expandir",
+    memoryCollapse: "Contraer",
+    memoryPlayersCount: "Jugadores",
+    memoryAliasesCount: "Alias",
+    memoryIgnoredCount: "Ignorados",
+    memoryCategoryLabel: "Categoría",
+    memoryCategoryPlayers: "Jugadores conocidos",
+    memoryCategoryManual: "Alias manuales",
+    memoryCategoryConfirmed: "Alias confirmados",
+    memoryCategoryRaw: "Nicknames confirmados",
+    memoryCategoryIgnored: "Nicknames ignorados",
+    memorySearchLabel: "Buscar registros",
+    memorySearchPlaceholder: "Escribe un nombre o alias...",
+    memoryExport: "Descargar copia JSON",
+    memoryImport: "Importar copia",
+    memoryPrivacy: "Las copias se procesan en este navegador. Importar no sustituye automáticamente los datos existentes.",
+    memoryImportTitle: "Revisar importación",
+    memoryImportDescription: "Revisa los datos antes de fusionarlos con la memoria local.",
+    memoryImportCancel: "Cancelar",
+    memoryImportConfirm: "Fusionar datos",
+    memoryEmpty: "No hay registros en esta categoría.",
+    memoryNoResults: "No se encontraron registros.",
+    memoryExported: "Copia descargada.",
+    memoryImportInvalid: "Archivo no válido. La memoria local no fue modificada.",
+    memoryImportWrongApp: "Este archivo no es una copia del Interview Scraper.",
+    memoryImportSchema: "Versión de esquema no compatible.",
+    memoryImportTooLarge: "El archivo supera los 2 MB.",
+    memoryImportFailed: "La importación falló. La memoria local fue restaurada.",
+    memoryImportSuccess: "Memoria fusionada.",
+    memoryNew: "Nuevos",
+    memoryDuplicate: "Duplicados",
+    memoryConflicts: "Conflictos",
+    memoryInconsistencies: "Inconsistencias",
+    memoryKeepLocal: "Mantener valor local",
+    memoryUseImported: "Usar valor importado",
+    memoryLocalValue: "Local",
+    memoryImportedValue: "Importado",
+    memoryConflictLabel: "Conflicto de alias",
+    memoryInconsistencyNote: "Hay nicknames confirmados e ignorados en conflicto. Se conservó la decisión local.",
     knownPlayerConfirm: "Recordar"
   },
 
@@ -606,6 +732,48 @@ https://youtube.com/...`,
     resultsEmptyHint: "Ajoutez les liens dans le panneau à côté et cliquez sur Générer les modèles.",
     themeToLight: "Activer le mode clair",
     themeToDark: "Activer le mode sombre",
+
+    memoryPanelTitle: "Mémoire du scraper",
+    memoryPanelSubtitle: "Joueurs et alias enregistrés dans ce navigateur.",
+    memoryExpand: "Développer",
+    memoryCollapse: "Réduire",
+    memoryPlayersCount: "Joueurs",
+    memoryAliasesCount: "Alias",
+    memoryIgnoredCount: "Ignorés",
+    memoryCategoryLabel: "Catégorie",
+    memoryCategoryPlayers: "Joueurs connus",
+    memoryCategoryManual: "Alias manuels",
+    memoryCategoryConfirmed: "Alias confirmés",
+    memoryCategoryRaw: "Pseudos confirmés",
+    memoryCategoryIgnored: "Pseudos ignorés",
+    memorySearchLabel: "Rechercher des enregistrements",
+    memorySearchPlaceholder: "Saisissez un nom ou un alias...",
+    memoryExport: "Télécharger la sauvegarde JSON",
+    memoryImport: "Importer une sauvegarde",
+    memoryPrivacy: "Les sauvegardes sont traitées dans ce navigateur. L'importation ne remplace pas automatiquement les données existantes.",
+    memoryImportTitle: "Vérifier l'importation",
+    memoryImportDescription: "Vérifiez les données avant de les fusionner avec la mémoire locale.",
+    memoryImportCancel: "Annuler",
+    memoryImportConfirm: "Fusionner les données",
+    memoryEmpty: "Aucun enregistrement dans cette catégorie.",
+    memoryNoResults: "Aucun enregistrement trouvé.",
+    memoryExported: "Sauvegarde téléchargée.",
+    memoryImportInvalid: "Fichier invalide. La mémoire locale n'a pas été modifiée.",
+    memoryImportWrongApp: "Ce fichier n'est pas une sauvegarde d'Interview Scraper.",
+    memoryImportSchema: "Version de schéma non prise en charge.",
+    memoryImportTooLarge: "Le fichier dépasse 2 Mo.",
+    memoryImportFailed: "L'importation a échoué. La mémoire locale a été restaurée.",
+    memoryImportSuccess: "Mémoire fusionnée.",
+    memoryNew: "Nouveaux",
+    memoryDuplicate: "Doublons",
+    memoryConflicts: "Conflits",
+    memoryInconsistencies: "Incohérences",
+    memoryKeepLocal: "Conserver la valeur locale",
+    memoryUseImported: "Utiliser la valeur importée",
+    memoryLocalValue: "Local",
+    memoryImportedValue: "Importé",
+    memoryConflictLabel: "Conflit d'alias",
+    memoryInconsistencyNote: "Des pseudos confirmés et ignorés se chevauchent. La décision locale a été conservée.",
     knownPlayerConfirm: "Mémoriser"
   }
 };
@@ -826,6 +994,8 @@ function saveKnownPlayerValues(values) {
     KNOWN_PLAYER_VALUES_KEY,
     JSON.stringify(normalizedValues)
   );
+
+  refreshMemoryPanel();
 }
 
 function rememberKnownPlayerValue(value) {
@@ -876,6 +1046,8 @@ function saveManualPlayerAliases(aliases) {
     MANUAL_PLAYER_ALIASES_KEY,
     JSON.stringify(aliases || {})
   );
+
+  refreshMemoryPanel();
 }
 
 function getIgnoredNicknames() {
@@ -909,6 +1081,8 @@ function saveIgnoredNicknames(nicknames) {
       )
     ])
   );
+
+  refreshMemoryPanel();
 }
 
 function getConfirmedAliases() {
@@ -936,6 +1110,8 @@ function saveConfirmedAliases(aliases) {
     CONFIRMED_ALIASES_KEY,
     JSON.stringify(aliases || {})
   );
+
+  refreshMemoryPanel();
 }
 
 const CONFIRMED_RAW_NICKNAMES_KEY =
@@ -972,6 +1148,8 @@ function saveConfirmedRawNicknames(nicknames) {
       )
     ])
   );
+
+  refreshMemoryPanel();
 }
 
 function removeIgnoredNickname(normalized) {
@@ -2701,3 +2879,703 @@ clearButton.addEventListener(
 
 loadTheme();
 applyLanguage();
+
+
+/* =========================================================
+   TICKET 02: LOCAL MEMORY PANEL
+========================================================= */
+
+const MEMORY_BACKUP_APP = "leaguepedia-interview-scraper";
+const MEMORY_BACKUP_SCHEMA = 1;
+const MEMORY_BACKUP_MAX_BYTES = 2 * 1024 * 1024;
+const MEMORY_FORBIDDEN_KEYS = new Set([
+  "__proto__",
+  "constructor",
+  "prototype"
+]);
+
+let pendingMemoryImport = null;
+
+function refreshMemoryPanel() {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const body = document.getElementById("memory-panel-body");
+
+  if (!body) {
+    return;
+  }
+
+  updateMemoryCounts();
+
+  if (!body.hidden) {
+    renderMemoryList();
+  }
+}
+
+function normalizeMemorySearch(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function isPlainMemoryObject(value) {
+  return Boolean(value) &&
+    typeof value === "object" &&
+    !Array.isArray(value);
+}
+
+function isForbiddenMemoryKey(key) {
+  return MEMORY_FORBIDDEN_KEYS.has(key) ||
+    String(key).includes("__proto__") ||
+    String(key).includes("prototype");
+}
+
+function safeMemoryEntries(value) {
+  if (!isPlainMemoryObject(value)) {
+    return [];
+  }
+
+  return Object.entries(value).filter(
+    ([key]) => !isForbiddenMemoryKey(key)
+  );
+}
+
+function formatMemoryValue(value) {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (
+    value === null ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return String(value);
+  }
+
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return "";
+  }
+}
+
+function memoryValuesEqual(left, right) {
+  if (Object.is(left, right)) {
+    return true;
+  }
+
+  if (
+    isPlainMemoryObject(left) ||
+    isPlainMemoryObject(right) ||
+    Array.isArray(left) ||
+    Array.isArray(right)
+  ) {
+    try {
+      return JSON.stringify(left) === JSON.stringify(right);
+    } catch {
+      return false;
+    }
+  }
+
+  return String(left) === String(right);
+}
+
+function collectMemorySnapshot() {
+  return {
+    knownPlayerValues: getKnownPlayerValues(),
+    manualPlayerAliases: Object.fromEntries(
+      safeMemoryEntries(getManualPlayerAliases())
+    ),
+    confirmedAliases: Object.fromEntries(
+      safeMemoryEntries(getConfirmedAliases())
+    ),
+    confirmedRawNicknames: getConfirmedRawNicknames(),
+    ignoredNicknames: getIgnoredNicknames()
+  };
+}
+
+function getMemoryRecords(category) {
+  const snapshot = collectMemorySnapshot();
+
+  if (category === "manualPlayerAliases" || category === "confirmedAliases") {
+    return Object.entries(snapshot[category]).map(([key, value]) => ({
+      key,
+      value,
+      text: `${key} → ${formatMemoryValue(value)}`
+    }));
+  }
+
+  return (snapshot[category] || []).map(value => ({
+    key: value,
+    value,
+    text: String(value)
+  }));
+}
+
+function updateMemoryCounts() {
+  const snapshot = collectMemorySnapshot();
+  const players = document.getElementById("memory-count-players");
+  const aliases = document.getElementById("memory-count-aliases");
+  const ignored = document.getElementById("memory-count-ignored");
+
+  if (players) {
+    players.textContent = String(snapshot.knownPlayerValues.length);
+  }
+
+  if (aliases) {
+    aliases.textContent = String(
+      Object.keys(snapshot.manualPlayerAliases).length +
+      Object.keys(snapshot.confirmedAliases).length
+    );
+  }
+
+  if (ignored) {
+    ignored.textContent = String(snapshot.ignoredNicknames.length);
+  }
+}
+
+function renderMemoryList() {
+  const list = document.getElementById("memory-list");
+  const status = document.getElementById("memory-list-status");
+  const category = document.getElementById("memory-category");
+  const search = document.getElementById("memory-search");
+
+  if (!list || !category) {
+    return;
+  }
+
+  const query = normalizeMemorySearch(search?.value || "");
+  const records = getMemoryRecords(category.value).filter(record => {
+    if (!query) {
+      return true;
+    }
+
+    return normalizeMemorySearch(
+      `${record.key} ${formatMemoryValue(record.value)} ${record.text}`
+    ).includes(query);
+  });
+
+  list.replaceChildren();
+
+  records.forEach(record => {
+    const item = document.createElement("li");
+    item.textContent = record.text;
+    list.appendChild(item);
+  });
+
+  if (status) {
+    status.textContent = records.length
+      ? ""
+      : t(query ? "memoryNoResults" : "memoryEmpty");
+  }
+}
+
+function setMemoryFeedback(message) {
+  const feedback = document.getElementById("memory-feedback");
+
+  if (feedback) {
+    feedback.textContent = message || "";
+  }
+}
+
+function exportMemoryBackup() {
+  const backup = {
+    app: MEMORY_BACKUP_APP,
+    schemaVersion: MEMORY_BACKUP_SCHEMA,
+    exportedAt: new Date().toISOString(),
+    data: collectMemorySnapshot()
+  };
+  const blob = new Blob(
+    [JSON.stringify(backup, null, 2)],
+    { type: "application/json" }
+  );
+  const date = backup.exportedAt.slice(0, 10);
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+  link.download = `leaguepedia-memory-${date}.json`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+  setMemoryFeedback(t("memoryExported"));
+}
+
+function normalizeImportedArray(values, normalize) {
+  if (!Array.isArray(values)) {
+    throw new Error("invalid");
+  }
+
+  return [...new Set(
+    values
+      .map(value => normalize(value))
+      .filter(Boolean)
+  )];
+}
+
+function normalizeImportedAliases(value) {
+  if (!isPlainMemoryObject(value)) {
+    throw new Error("invalid");
+  }
+
+  const aliases = Object.create(null);
+
+  safeMemoryEntries(value).forEach(([key, aliasValue]) => {
+    const normalized = normalizeManualPlayerAlias(key);
+
+    if (!normalized || isForbiddenMemoryKey(normalized)) {
+      return;
+    }
+
+    aliases[normalized] = aliasValue;
+  });
+
+  return aliases;
+}
+
+function validateMemoryBackup(parsed) {
+  if (!isPlainMemoryObject(parsed)) {
+    throw new Error(t("memoryImportInvalid"));
+  }
+
+  if (parsed.app !== MEMORY_BACKUP_APP) {
+    throw new Error(t("memoryImportWrongApp"));
+  }
+
+  if (parsed.schemaVersion !== MEMORY_BACKUP_SCHEMA) {
+    throw new Error(t("memoryImportSchema"));
+  }
+
+  if (!isPlainMemoryObject(parsed.data)) {
+    throw new Error(t("memoryImportInvalid"));
+  }
+
+  return {
+    knownPlayerValues: normalizeImportedArray(
+      parsed.data.knownPlayerValues,
+      normalizeKnownPlayerValue
+    ),
+    manualPlayerAliases: normalizeImportedAliases(
+      parsed.data.manualPlayerAliases
+    ),
+    confirmedAliases: normalizeImportedAliases(
+      parsed.data.confirmedAliases
+    ),
+    confirmedRawNicknames: normalizeImportedArray(
+      parsed.data.confirmedRawNicknames,
+      value => String(value || "").trim().toLowerCase()
+    ),
+    ignoredNicknames: normalizeImportedArray(
+      parsed.data.ignoredNicknames,
+      value => String(value || "").trim().toLowerCase()
+    )
+  };
+}
+
+function mergeMemoryArrays(localValues, importedValues) {
+  const result = [...localValues];
+  const seen = new Set(localValues);
+  let added = 0;
+  let duplicate = 0;
+
+  importedValues.forEach(value => {
+    if (seen.has(value)) {
+      duplicate += 1;
+      return;
+    }
+
+    seen.add(value);
+    result.push(value);
+    added += 1;
+  });
+
+  return { result, added, duplicate };
+}
+
+function mergeMemoryAliases(localAliases, importedAliases) {
+  const result = Object.assign(Object.create(null), localAliases);
+  const conflicts = [];
+  let added = 0;
+  let duplicate = 0;
+
+  Object.entries(importedAliases).forEach(([key, value]) => {
+    if (!Object.prototype.hasOwnProperty.call(localAliases, key)) {
+      result[key] = value;
+      added += 1;
+      return;
+    }
+
+    if (memoryValuesEqual(localAliases[key], value)) {
+      duplicate += 1;
+      return;
+    }
+
+    conflicts.push({
+      key,
+      local: localAliases[key],
+      imported: value,
+      choice: "local"
+    });
+  });
+
+  return { result, added, duplicate, conflicts };
+}
+
+function buildMemoryMerge(localData, importedData) {
+  const players = mergeMemoryArrays(
+    localData.knownPlayerValues,
+    importedData.knownPlayerValues
+  );
+  const manual = mergeMemoryAliases(
+    localData.manualPlayerAliases,
+    importedData.manualPlayerAliases
+  );
+  const confirmed = mergeMemoryAliases(
+    localData.confirmedAliases,
+    importedData.confirmedAliases
+  );
+  const localRaw = new Set(localData.confirmedRawNicknames);
+  const localIgnored = new Set(localData.ignoredNicknames);
+  const inconsistencies = [];
+
+  const raw = mergeMemoryArrays(
+    localData.confirmedRawNicknames,
+    importedData.confirmedRawNicknames.filter(nickname => {
+      if (localIgnored.has(nickname)) {
+        inconsistencies.push(nickname);
+        return false;
+      }
+
+      return true;
+    })
+  );
+  const ignored = mergeMemoryArrays(
+    localData.ignoredNicknames,
+    importedData.ignoredNicknames.filter(nickname => {
+      if (localRaw.has(nickname) || raw.result.includes(nickname)) {
+        inconsistencies.push(nickname);
+        return false;
+      }
+
+      return true;
+    })
+  );
+
+  importedData.confirmedRawNicknames.forEach(nickname => {
+    if (
+      importedData.ignoredNicknames.includes(nickname) &&
+      !localRaw.has(nickname) &&
+      !localIgnored.has(nickname)
+    ) {
+      inconsistencies.push(nickname);
+      raw.result = raw.result.filter(value => value !== nickname);
+      ignored.result = ignored.result.filter(value => value !== nickname);
+    }
+  });
+
+  return {
+    data: {
+      knownPlayerValues: players.result,
+      manualPlayerAliases: manual.result,
+      confirmedAliases: confirmed.result,
+      confirmedRawNicknames: raw.result,
+      ignoredNicknames: ignored.result
+    },
+    added: players.added + manual.added + confirmed.added + raw.added + ignored.added,
+    duplicate: players.duplicate + manual.duplicate + confirmed.duplicate + raw.duplicate + ignored.duplicate,
+    conflicts: [
+      ...manual.conflicts.map(conflict => ({ ...conflict, category: "manualPlayerAliases" })),
+      ...confirmed.conflicts.map(conflict => ({ ...conflict, category: "confirmedAliases" }))
+    ],
+    inconsistencies: [...new Set(inconsistencies)]
+  };
+}
+
+function applyConflictChoices(merge, choices) {
+  const next = {
+    ...merge,
+    data: {
+      ...merge.data,
+      manualPlayerAliases: Object.assign(
+        Object.create(null),
+        merge.data.manualPlayerAliases
+      ),
+      confirmedAliases: Object.assign(
+        Object.create(null),
+        merge.data.confirmedAliases
+      )
+    }
+  };
+
+  choices.forEach(choice => {
+    if (choice.choice !== "imported") {
+      return;
+    }
+
+    next.data[choice.category][choice.key] = choice.imported;
+  });
+
+  return next;
+}
+
+function snapshotMemoryStorage() {
+  return {
+    [KNOWN_PLAYER_VALUES_KEY]: localStorage.getItem(KNOWN_PLAYER_VALUES_KEY),
+    [MANUAL_PLAYER_ALIASES_KEY]: localStorage.getItem(MANUAL_PLAYER_ALIASES_KEY),
+    [CONFIRMED_ALIASES_KEY]: localStorage.getItem(CONFIRMED_ALIASES_KEY),
+    [CONFIRMED_RAW_NICKNAMES_KEY]: localStorage.getItem(CONFIRMED_RAW_NICKNAMES_KEY),
+    [IGNORED_NICKNAMES_KEY]: localStorage.getItem(IGNORED_NICKNAMES_KEY)
+  };
+}
+
+function restoreMemoryStorage(snapshot) {
+  Object.entries(snapshot).forEach(([key, value]) => {
+    if (value === null) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, value);
+    }
+  });
+}
+
+function writeMergedMemory(data) {
+  const snapshot = snapshotMemoryStorage();
+
+  try {
+    saveKnownPlayerValues(data.knownPlayerValues);
+    saveManualPlayerAliases(data.manualPlayerAliases);
+    saveConfirmedAliases(data.confirmedAliases);
+    saveConfirmedRawNicknames(data.confirmedRawNicknames);
+    saveIgnoredNicknames(data.ignoredNicknames);
+
+    const written = collectMemorySnapshot();
+
+    if (
+      written.knownPlayerValues.length !== data.knownPlayerValues.length ||
+      Object.keys(written.manualPlayerAliases).length !== Object.keys(data.manualPlayerAliases).length ||
+      Object.keys(written.confirmedAliases).length !== Object.keys(data.confirmedAliases).length
+    ) {
+      throw new Error("partial");
+    }
+  } catch (error) {
+    restoreMemoryStorage(snapshot);
+    refreshMemoryPanel();
+    throw error;
+  }
+}
+
+function renderMemoryImportPreview(merge) {
+  const summary = document.getElementById("memory-import-summary");
+  const conflicts = document.getElementById("memory-import-conflicts");
+  const error = document.getElementById("memory-import-error");
+
+  if (error) {
+    error.textContent = "";
+  }
+
+  if (summary) {
+    summary.textContent = [
+      `${t("memoryNew")}: ${merge.added}`,
+      `${t("memoryDuplicate")}: ${merge.duplicate}`,
+      `${t("memoryConflicts")}: ${merge.conflicts.length}`,
+      `${t("memoryInconsistencies")}: ${merge.inconsistencies.length}`,
+      merge.inconsistencies.length
+        ? t("memoryInconsistencyNote")
+        : ""
+    ].filter(Boolean).join("\n");
+  }
+
+  if (!conflicts) {
+    return;
+  }
+
+  conflicts.replaceChildren();
+
+  merge.conflicts.forEach((conflict, index) => {
+    const box = document.createElement("div");
+    box.className = "memory-conflict";
+
+    const title = document.createElement("strong");
+    title.textContent = `${t("memoryConflictLabel")}: ${conflict.key}`;
+    box.appendChild(title);
+
+    const local = document.createElement("p");
+    local.textContent = `${t("memoryLocalValue")}: ${formatMemoryValue(conflict.local)}`;
+    box.appendChild(local);
+
+    const imported = document.createElement("p");
+    imported.textContent = `${t("memoryImportedValue")}: ${formatMemoryValue(conflict.imported)}`;
+    box.appendChild(imported);
+
+    const label = document.createElement("label");
+    label.textContent = t("memoryConflictLabel");
+    label.setAttribute("for", `memory-conflict-${index}`);
+
+    const select = document.createElement("select");
+    select.id = `memory-conflict-${index}`;
+    select.dataset.conflictIndex = String(index);
+
+    const keep = document.createElement("option");
+    keep.value = "local";
+    keep.textContent = t("memoryKeepLocal");
+    keep.selected = true;
+
+    const useImported = document.createElement("option");
+    useImported.value = "imported";
+    useImported.textContent = t("memoryUseImported");
+
+    select.appendChild(keep);
+    select.appendChild(useImported);
+    label.appendChild(select);
+    box.appendChild(label);
+    conflicts.appendChild(box);
+  });
+}
+
+function openMemoryImportModal() {
+  const modal = document.getElementById("memory-import-modal");
+
+  if (!modal) {
+    return;
+  }
+
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+  document.getElementById("memory-import-confirm")?.focus();
+}
+
+function closeMemoryImportModal() {
+  const modal = document.getElementById("memory-import-modal");
+
+  if (!modal) {
+    return;
+  }
+
+  modal.hidden = true;
+  document.body.classList.remove("modal-open");
+  pendingMemoryImport = null;
+}
+
+function confirmMemoryImport() {
+  if (!pendingMemoryImport) {
+    return;
+  }
+
+  const choices = pendingMemoryImport.conflicts.map((conflict, index) => {
+    const select = document.getElementById(`memory-conflict-${index}`);
+
+    return {
+      ...conflict,
+      choice: select?.value === "imported" ? "imported" : "local"
+    };
+  });
+  const merge = applyConflictChoices(pendingMemoryImport, choices);
+
+  try {
+    writeMergedMemory(merge.data);
+    closeMemoryImportModal();
+    setMemoryFeedback(t("memoryImportSuccess"));
+    refreshMemoryPanel();
+  } catch {
+    const error = document.getElementById("memory-import-error");
+
+    if (error) {
+      error.textContent = t("memoryImportFailed");
+    }
+
+    setMemoryFeedback(t("memoryImportFailed"));
+  }
+}
+
+function handleMemoryFile(file) {
+  if (!file) {
+    return;
+  }
+
+  if (file.size > MEMORY_BACKUP_MAX_BYTES) {
+    setMemoryFeedback(t("memoryImportTooLarge"));
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result || ""));
+      const imported = validateMemoryBackup(parsed);
+      const merge = buildMemoryMerge(collectMemorySnapshot(), imported);
+
+      pendingMemoryImport = merge;
+      renderMemoryImportPreview(merge);
+      openMemoryImportModal();
+    } catch (error) {
+      pendingMemoryImport = null;
+      setMemoryFeedback(
+        error instanceof Error && error.message && error.message !== "invalid"
+          ? error.message
+          : t("memoryImportInvalid")
+      );
+    }
+  };
+
+  reader.onerror = () => {
+    setMemoryFeedback(t("memoryImportInvalid"));
+  };
+
+  reader.readAsText(file);
+}
+
+function initMemoryPanel() {
+  const toggle = document.getElementById("memory-toggle");
+  const body = document.getElementById("memory-panel-body");
+  const category = document.getElementById("memory-category");
+  const search = document.getElementById("memory-search");
+  const exportButton = document.getElementById("memory-export");
+  const importButton = document.getElementById("memory-import");
+  const fileInput = document.getElementById("memory-file");
+  const cancel = document.getElementById("memory-import-cancel");
+  const confirm = document.getElementById("memory-import-confirm");
+  const backdrop = document.querySelector("[data-memory-import-dismiss]");
+
+  if (!toggle || !body) {
+    return;
+  }
+
+  toggle.addEventListener("click", () => {
+    const willOpen = body.hidden;
+
+    body.hidden = !willOpen;
+    toggle.setAttribute("aria-expanded", String(willOpen));
+    toggle.dataset.i18n = willOpen
+      ? "memoryCollapse"
+      : "memoryExpand";
+    toggle.textContent = t(toggle.dataset.i18n);
+
+    if (willOpen) {
+      refreshMemoryPanel();
+    }
+  });
+
+  category?.addEventListener("change", renderMemoryList);
+  search?.addEventListener("input", renderMemoryList);
+  exportButton?.addEventListener("click", exportMemoryBackup);
+  importButton?.addEventListener("click", () => fileInput?.click());
+  fileInput?.addEventListener("change", () => {
+    handleMemoryFile(fileInput.files?.[0]);
+    fileInput.value = "";
+  });
+  cancel?.addEventListener("click", closeMemoryImportModal);
+  confirm?.addEventListener("click", confirmMemoryImport);
+  backdrop?.addEventListener("click", closeMemoryImportModal);
+  window.addEventListener("storage", event => {
+    if (String(event.key || "").startsWith("leaguepedia-scraper-")) {
+      refreshMemoryPanel();
+    }
+  });
+
+  updateMemoryCounts();
+}
+
+initMemoryPanel();
