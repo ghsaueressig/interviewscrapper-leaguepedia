@@ -273,3 +273,120 @@ class EndpointTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+FAKE_YOUTUBE_KEY = "FAKE_YT_KEY_DO_NOT_LOG_12345"
+
+
+class YouTubeKeyLeakTests(unittest.TestCase):
+    def _capture_logs(self, logger_name):
+        import logging
+        from io import StringIO
+        stream = StringIO()
+        handler = logging.StreamHandler(stream)
+        handler.setLevel(logging.DEBUG)
+        logger = logging.getLogger(logger_name)
+        previous = logger.level
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+        return stream, handler, logger, previous
+
+    def _release_logs(self, stream, handler, logger, previous):
+        logger.removeHandler(handler)
+        logger.setLevel(previous)
+        return stream.getvalue()
+
+    def test_connection_failure_does_not_leak_key(self):
+        import youtube_metadata
+        leaked = (
+            "HTTPSConnectionPool(host='www.googleapis.com', port=443): "
+            f"Max retries exceeded with url: /youtube/v3/videos?key={FAKE_YOUTUBE_KEY}"
+        )
+        stream, handler, logger, previous = self._capture_logs("youtube_metadata")
+        try:
+            with patch.dict(os.environ, {"YOUTUBE_API_KEY": FAKE_YOUTUBE_KEY}), \
+                 patch.object(youtube_metadata, "YOUTUBE_API_KEY", FAKE_YOUTUBE_KEY), \
+                 patch("youtube_metadata.requests.Session.get",
+                       side_effect=requests.ConnectionError(leaked)):
+                with self.assertRaises(requests.RequestException) as caught:
+                    youtube_metadata.get_youtube_metadata(
+                        "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                    )
+        finally:
+            logged = self._release_logs(stream, handler, logger, previous)
+
+        import traceback
+        formatted = "".join(traceback.format_exception(
+            type(caught.exception), caught.exception, caught.exception.__traceback__
+        ))
+        self.assertNotIn(FAKE_YOUTUBE_KEY, str(caught.exception))
+        self.assertNotIn(FAKE_YOUTUBE_KEY, repr(caught.exception))
+        self.assertNotIn(FAKE_YOUTUBE_KEY, formatted)
+        self.assertIsNone(caught.exception.__cause__)
+        self.assertTrue(caught.exception.__suppress_context__)
+        self.assertNotIn(FAKE_YOUTUBE_KEY, logged)
+
+    def test_timeout_does_not_leak_key(self):
+        import youtube_metadata
+        leaked = f"Read timed out. (read timeout=15) url=https://www.googleapis.com/youtube/v3/videos?id=dQw4w9WgXcQ&key={FAKE_YOUTUBE_KEY}"
+        with patch.dict(os.environ, {"YOUTUBE_API_KEY": FAKE_YOUTUBE_KEY}), \
+             patch.object(youtube_metadata, "YOUTUBE_API_KEY", FAKE_YOUTUBE_KEY), \
+             patch("youtube_metadata.requests.Session.get",
+                   side_effect=requests.Timeout(leaked)):
+            with self.assertRaises(requests.RequestException) as caught:
+                youtube_metadata.get_youtube_metadata(
+                    "https://youtu.be/dQw4w9WgXcQ"
+                )
+        import traceback
+        formatted = "".join(traceback.format_exception(
+            type(caught.exception), caught.exception, caught.exception.__traceback__
+        ))
+        self.assertNotIn(FAKE_YOUTUBE_KEY, str(caught.exception))
+        self.assertNotIn(FAKE_YOUTUBE_KEY, formatted)
+        self.assertIsNone(caught.exception.__cause__)
+        self.assertTrue(caught.exception.__suppress_context__)
+
+    def test_scrape_youtube_log_and_response_hide_key(self):
+        import app as app_module
+        leaked = RuntimeError(
+            f"request failed for https://www.googleapis.com/youtube/v3/videos?key={FAKE_YOUTUBE_KEY}"
+        )
+        stream, handler, logger, previous = self._capture_logs("app")
+        try:
+            with patch.object(app_module, "get_youtube_metadata", side_effect=leaked):
+                result = app_module.scrape_youtube(
+                    "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                )
+        finally:
+            logged = self._release_logs(stream, handler, logger, previous)
+
+        self.assertEqual(result["error"], "Erro ao processar vídeo do YouTube.")
+        self.assertNotIn(FAKE_YOUTUBE_KEY, result["error"])
+        self.assertNotIn(FAKE_YOUTUBE_KEY, logged)
+        self.assertIn("RuntimeError", logged)
+        self.assertNotIn("Traceback", logged)
+
+    def test_metadata_endpoint_hides_key_on_timeout(self):
+        import app as app_module
+        leaked = requests.Timeout(
+            f"timeout key={FAKE_YOUTUBE_KEY}"
+        )
+        client = app_module.app.test_client()
+        stream, handler, logger, previous = self._capture_logs("app")
+        try:
+            with patch.object(app_module, "get_youtube_metadata", side_effect=leaked):
+                response = client.post(
+                    "/api/youtube-metadata",
+                    json={"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"},
+                )
+        finally:
+            logged = self._release_logs(stream, handler, logger, previous)
+
+        self.assertEqual(response.status_code, 500)
+        body = response.get_data(as_text=True)
+        self.assertNotIn(FAKE_YOUTUBE_KEY, body)
+        self.assertEqual(
+            response.get_json()["error"],
+            "Erro ao consultar metadados do YouTube.",
+        )
+        self.assertNotIn(FAKE_YOUTUBE_KEY, logged)

@@ -37,24 +37,24 @@ def get_youtube_metadata(url):
             "error": "YOUTUBE_API_KEY não configurada"
         }
 
-    with requests.Session() as session:
-        session.trust_env = False
-        response = session.get(
-            "https://www.googleapis.com/youtube/v3/videos",
-            params={
-                "part": "snippet,contentDetails,statistics",
-                "id": video_id,
-                "key": YOUTUBE_API_KEY
-            },
-            timeout=15
-        )
-
     try:
-        response.raise_for_status()
-    except requests.HTTPError as exc:
-        raise requests.HTTPError(
+        with requests.Session() as session:
+            session.trust_env = False
+            response = session.get(
+                "https://www.googleapis.com/youtube/v3/videos",
+                params={
+                    "part": "snippet,contentDetails,statistics",
+                    "id": video_id,
+                    "key": YOUTUBE_API_KEY
+                },
+                timeout=15
+            )
+            response.raise_for_status()
+    except requests.RequestException:
+        # Do not chain: the original message includes the request URL and key.
+        raise requests.RequestException(
             "Erro ao consultar metadados do YouTube."
-        ) from exc
+        ) from None
 
     data = response.json()
 
