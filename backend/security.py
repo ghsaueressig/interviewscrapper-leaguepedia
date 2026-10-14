@@ -2,8 +2,13 @@
 
 Only configured publishers may be fetched. Connections are made to a vetted
 DNS result, rather than resolving the hostname again inside the HTTP client.
-"""
 
+Protocol policy: HTTP and HTTPS are both accepted. The current publishers
+redirect HTTP to HTTPS, so old http:// links remain usable. Every redirect,
+including HTTP to HTTPS, is validated again for domain, credentials and port.
+The policy is intentionally unchanged: dropping HTTP would reject still-shared
+links before the publisher redirect can run.
+"""
 from __future__ import annotations
 
 import ipaddress
@@ -53,6 +58,49 @@ def validate_url(url: str, allowed_domains=None) -> str:
     # Only apex and www: do not automatically trust arbitrary subdomains.
     if not any(hostname == domain or hostname == "www." + domain for domain in allowed):
         raise UnsafeURLError("Domínio não permitido para artigos.")
+    if parsed.fragment:
+        parsed = parsed._replace(fragment="")
+    return urlunsplit(parsed)
+
+
+
+YOUTUBE_APEX_HOSTS = {
+    "youtube.com",
+    "youtu.be",
+    "youtube-nocookie.com",
+}
+
+
+def _is_youtube_host(hostname: str) -> bool:
+    return any(
+        hostname == domain or hostname.endswith("." + domain)
+        for domain in YOUTUBE_APEX_HOSTS
+    )
+
+
+def validate_youtube_url(url: str) -> str:
+    """Return a canonical YouTube URL, or reject anything else."""
+    if not isinstance(url, str) or not url or len(url) > 2048:
+        raise UnsafeURLError("URL inválida ou muito longa.")
+    if any(ord(c) < 33 or ord(c) == 127 for c in url):
+        raise UnsafeURLError("URL contém caracteres proibidos.")
+    try:
+        parsed = urlsplit(url)
+        hostname = parsed.hostname
+        port = parsed.port
+    except ValueError as exc:
+        raise UnsafeURLError("URL malformada.") from exc
+    if parsed.scheme not in ("https", "http") or not hostname:
+        raise UnsafeURLError("Protocolo ou hostname inválido.")
+    if parsed.username is not None or parsed.password is not None:
+        raise UnsafeURLError("Credenciais na URL não são permitidas.")
+    if port not in (None, 80, 443):
+        raise UnsafeURLError("Porta não permitida.")
+    if (parsed.scheme == "https" and port == 80) or (parsed.scheme == "http" and port == 443):
+        raise UnsafeURLError("Combinação de porta e protocolo inválida.")
+    hostname = hostname.lower().rstrip(".")
+    if not _is_youtube_host(hostname):
+        raise UnsafeURLError("Apenas URLs do YouTube são permitidas.")
     if parsed.fragment:
         parsed = parsed._replace(fragment="")
     return urlunsplit(parsed)
