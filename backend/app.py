@@ -949,7 +949,7 @@ def scrape_youtube(url):
         }
 
     except Exception as exc:
-        logger.exception(
+        logger.error(
             "Falha interna ao processar vídeo do YouTube (%s)",
             type(exc).__name__,
         )
