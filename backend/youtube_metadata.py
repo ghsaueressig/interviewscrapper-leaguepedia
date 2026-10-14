@@ -7,6 +7,8 @@ YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 
 def extract_youtube_id(url):
+    if not isinstance(url, str):
+        return None
     patterns = [
         r"(?:youtube\.com/watch\?v=)([^&?/]+)",
         r"(?:youtu\.be/)([^&?/]+)",
@@ -16,7 +18,7 @@ def extract_youtube_id(url):
 
     for pattern in patterns:
         match = re.search(pattern, url)
-        if match:
+        if match and re.fullmatch(r"[A-Za-z0-9_-]{6,20}", match.group(1)):
             return match.group(1)
 
     return None
@@ -35,17 +37,24 @@ def get_youtube_metadata(url):
             "error": "YOUTUBE_API_KEY não configurada"
         }
 
-    response = requests.get(
-        "https://www.googleapis.com/youtube/v3/videos",
-        params={
-            "part": "snippet,contentDetails,statistics",
-            "id": video_id,
-            "key": YOUTUBE_API_KEY
-        },
-        timeout=15
-    )
+    with requests.Session() as session:
+        session.trust_env = False
+        response = session.get(
+            "https://www.googleapis.com/youtube/v3/videos",
+            params={
+                "part": "snippet,contentDetails,statistics",
+                "id": video_id,
+                "key": YOUTUBE_API_KEY
+            },
+            timeout=15
+        )
 
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as exc:
+        raise requests.HTTPError(
+            "Erro ao consultar metadados do YouTube."
+        ) from exc
 
     data = response.json()
 

@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import json
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
+import logging
 import re
 import unicodedata
 from collections import defaultdict
@@ -41,9 +42,16 @@ from data.tournaments import (
 )
 from data.authors import AUTHOR_MAPPINGS
 from data.config import MAX_URLS_PER_REQUEST
+from security import (
+    UnsafeURLError,
+    safe_get,
+    validate_url,
+    validate_youtube_url,
+)
 
 app = Flask(__name__)
 CORS(app)
+logger = logging.getLogger(__name__)
 
 def parse_date(value):
     if not value:
@@ -712,9 +720,17 @@ def scrape_youtube(url):
         metadata = get_youtube_metadata(url)
 
         if metadata.get('error'):
+            safe_errors = {
+                "URL do YouTube inválida",
+                "Vídeo não encontrado",
+            }
+            message = metadata.get('error')
+            if message not in safe_errors:
+                logger.error("Falha de metadados do YouTube: %s", message)
+                message = "Erro ao processar vídeo do YouTube."
             return {
                 'url': url,
-                'error': metadata['error']
+                'error': message
             }
 
         title = metadata.get('title') or ''
@@ -933,13 +949,13 @@ def scrape_youtube(url):
         }
 
     except Exception as exc:
-
+        logger.exception(
+            "Falha interna ao processar vídeo do YouTube (%s)",
+            type(exc).__name__,
+        )
         return {
             'url': url,
-            'error': (
-                f'Erro ao processar vídeo '
-                f'do YouTube: {exc}'
-            )
+            'error': 'Erro ao processar vídeo do YouTube.'
         }
 
 def detect_author(content_text):
@@ -960,10 +976,9 @@ def scrape_article(url):
             "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
         }
 
-        response = requests.get(
+        response = safe_get(
             url,
             headers=headers,
-            timeout=15
         )
 
         response.raise_for_status()
@@ -1215,20 +1230,23 @@ def scrape_article(url):
             'fuzzy_candidates': fuzzy_candidates
         }
 
-    except requests.RequestException as exc:
+    except UnsafeURLError:
         return {
             'url': url,
-            'error': (
-                f'Erro ao acessar a página: {exc}'
-            )
+            'error': 'URL não permitida.'
         }
 
-    except Exception as exc:
+    except requests.RequestException:
         return {
             'url': url,
-            'error': (
-                f'Erro ao processar a página: {exc}'
-            )
+            'error': 'Erro ao acessar a página.'
+        }
+
+    except Exception:
+        logger.exception("Falha interna ao processar artigo")
+        return {
+            'url': url,
+            'error': 'Erro ao processar a página.'
         }
 
 def make_template(res):
@@ -1288,30 +1306,46 @@ def health():
 
 @app.route("/api/youtube-metadata", methods=["POST"])
 def youtube_metadata():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({
+            "error": "JSON inválido."
+        }), 400
 
-    if not data or not data.get("url"):
+    if not isinstance(data.get("url"), str) or not data.get("url"):
         return jsonify({
             "error": "URL não informada"
         }), 400
 
     try:
-        result = get_youtube_metadata(data["url"])
+        url = validate_youtube_url(data["url"])
+    except UnsafeURLError:
+        return jsonify({
+            "error": "URL do YouTube inválida."
+        }), 400
+
+    try:
+        result = get_youtube_metadata(url)
         return jsonify(result)
 
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         return jsonify({
-            "error": f"Erro ao consultar YouTube API: {str(e)}"
+            "error": "Erro ao consultar metadados do YouTube."
         }), 500
 
-    except Exception as e:
+    except Exception:
         return jsonify({
-            "error": str(e)
+            "error": "Erro ao processar a URL do YouTube."
         }), 500
 
 @app.post('/api/scrape')
 def scrape():
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({
+            "error": "JSON inválido."
+        }), 400
+
     urls = payload.get('urls', [])
 
     if not isinstance(urls, list):
@@ -1344,10 +1378,18 @@ def scrape():
 
     for url in urls:
 
-        if is_youtube_url(url):
-            result = scrape_youtube(url)
-        else:
-            result = scrape_article(url)
+        try:
+            if is_youtube_url(url):
+                validate_youtube_url(url)
+                result = scrape_youtube(url)
+            else:
+                validate_url(url)
+                result = scrape_article(url)
+        except UnsafeURLError:
+            result = {
+                'url': url,
+                'error': 'URL não permitida.'
+            }
 
         if 'error' not in result:
             result['template'] = make_template(result)
